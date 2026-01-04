@@ -1,9 +1,13 @@
 /**
  * Level 2: Integration tests for filesystem operations
- * Story: story-32_detect-tests-dir
+ * Stories: story-32_detect-tests-dir, story-43_parse-done-md
  */
 import { describe, it, expect } from "vitest";
-import { hasTestsDirectory, isTestsDirectoryEmpty } from "@/status/state";
+import {
+  hasTestsDirectory,
+  isTestsDirectoryEmpty,
+  hasDoneMd,
+} from "@/status/state";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -109,5 +113,63 @@ describe("isTestsDirectoryEmpty", () => {
 
     // Then
     expect(result).toBe(true); // .gitkeep doesn't count as "has tests"
+  });
+});
+
+describe("hasDoneMd", () => {
+  it("GIVEN tests dir with DONE.md WHEN checking THEN returns true", async () => {
+    // Given
+    const testsPath = path.join(
+      __dirname,
+      "../../fixtures/work-items/done-item/tests"
+    );
+
+    // When
+    const result = await hasDoneMd(testsPath);
+
+    // Then
+    expect(result).toBe(true);
+  });
+
+  it("GIVEN tests dir without DONE.md WHEN checking THEN returns false", async () => {
+    // Given
+    const testsPath = path.join(
+      __dirname,
+      "../../fixtures/work-items/in-progress/tests"
+    );
+
+    // When
+    const result = await hasDoneMd(testsPath);
+
+    // Then
+    expect(result).toBe(false);
+  });
+
+  it("GIVEN DONE.md as directory (not file) WHEN checking THEN returns false", async () => {
+    // Given
+    const testsPath = path.join(
+      __dirname,
+      "../../fixtures/work-items/done-is-dir/tests"
+    );
+
+    // When
+    const result = await hasDoneMd(testsPath);
+
+    // Then
+    expect(result).toBe(false); // Directory doesn't count
+  });
+
+  it("GIVEN DONE.md with different case WHEN checking THEN returns false", async () => {
+    // Given
+    const testsPath = path.join(
+      __dirname,
+      "../../fixtures/work-items/wrong-case/tests"
+    );
+
+    // When
+    const result = await hasDoneMd(testsPath);
+
+    // Then
+    expect(result).toBe(false); // Case-sensitive
   });
 });

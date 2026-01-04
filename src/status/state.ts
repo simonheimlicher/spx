@@ -2,7 +2,7 @@
  * Status determination state machine for work items
  */
 import type { WorkItemStatus } from "../types";
-import { access, readdir } from "fs/promises";
+import { access, readdir, stat } from "fs/promises";
 import path from "path";
 
 /**
@@ -142,6 +142,50 @@ export async function isTestsDirectoryEmpty(
     // ENOENT means directory doesn't exist → treat as empty
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
       return true;
+    }
+    // Re-throw permission errors and other failures
+    throw error;
+  }
+}
+
+/**
+ * Checks if a tests/ directory contains a DONE.md file
+ *
+ * Verifies that DONE.md exists and is a regular file (not a directory).
+ * The check is case-sensitive: only "DONE.md" is accepted.
+ *
+ * @param testsPath - Absolute path to the tests/ directory
+ * @returns Promise resolving to true if DONE.md exists, false otherwise
+ *
+ * @example
+ * ```typescript
+ * // Tests directory with DONE.md
+ * await hasDoneMd('/path/to/tests');
+ * // => true
+ *
+ * // Tests directory without DONE.md
+ * await hasDoneMd('/path/to/tests');
+ * // => false
+ * ```
+ */
+export async function hasDoneMd(testsPath: string): Promise<boolean> {
+  try {
+    // Case-sensitive check: read directory and verify exact filename
+    const entries = await readdir(testsPath);
+
+    // Check if "DONE.md" exists in the directory listing (case-sensitive)
+    if (!entries.includes("DONE.md")) {
+      return false;
+    }
+
+    // Verify it's a regular file, not a directory
+    const donePath = path.join(testsPath, "DONE.md");
+    const stats = await stat(donePath);
+    return stats.isFile();
+  } catch (error) {
+    // ENOENT means directory doesn't exist → return false
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return false;
     }
     // Re-throw permission errors and other failures
     throw error;
