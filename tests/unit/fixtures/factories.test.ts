@@ -78,6 +78,7 @@ describe("createWorkItem", () => {
       kind: "capability",
       number: 20,
       slug: "core-cli",
+      path: "/test/specs/doing/capability-21_core-cli",
     });
   });
 

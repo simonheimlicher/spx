@@ -23,8 +23,8 @@ describe("formatText", () => {
       const tree = buildTreeWithFeatures();
       const output = formatText(tree);
 
-      expect(output).toMatch(/^  feature-21_test/m);
-      expect(output).toMatch(/^  feature-32_test/m);
+      expect(output).toMatch(/^ {2}feature-21_test/m);
+      expect(output).toMatch(/^ {2}feature-32_test/m);
     });
   });
 
@@ -33,8 +33,8 @@ describe("formatText", () => {
       const tree = buildTreeWithStories();
       const output = formatText(tree);
 
-      expect(output).toMatch(/^    story-21_test/m);
-      expect(output).toMatch(/^    story-32_test/m);
+      expect(output).toMatch(/^ {4}story-21_test/m);
+      expect(output).toMatch(/^ {4}story-32_test/m);
     });
   });
 

@@ -71,10 +71,14 @@ export function createWorkItemName(params: {
 export function createWorkItem(
   params: Partial<WorkItem> & { kind: WorkItemKind }
 ): WorkItem {
+  const number = params.number ?? randomBSPNumber();
+  const slug = params.slug ?? `test-${Math.random().toString(36).slice(2, 8)}`;
+  const name = createWorkItemName({ kind: params.kind, number, slug });
   return {
     kind: params.kind,
-    number: params.number ?? randomBSPNumber(),
-    slug: params.slug ?? `test-${Math.random().toString(36).slice(2, 8)}`,
+    number,
+    slug,
+    path: params.path ?? `/test/specs/doing/${name}`,
   };
 }
 
@@ -102,5 +106,6 @@ export function createRandomWorkItem(params?: Partial<WorkItem>): WorkItem {
     kind,
     number: params?.number,
     slug: params?.slug,
+    path: params?.path,
   });
 }
