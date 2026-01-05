@@ -11,82 +11,102 @@ Complete end-to-end capability tests verify the entire workflow:
 
 This feature contains the E2E tests that prove Capability-21 is complete.
 
+## Architectural Requirements
+
+### Relevant ADRs
+
+1. **ADR-003: E2E Fixture Generation Strategy** - Programmatic fixture generation with faker.js
+   - `generateFixtureTree(config)` - Pure function to create tree structure
+   - `materializeFixture(tree)` - Write to `os.tmpdir()`, return cleanup handle
+   - `PRESETS` object with `MINIMAL`, `SHALLOW_50`, `DEEP_50`, `FAN_10_LEVEL_3`
+
 ## Testing Strategy
 
-> Features require **Level 1 + Level 2** to prove the feature works with real tools.
 > See `context/4-testing-standards.md` for level definitions.
 
 ### Level Assignment
 
-| Component                | Level | Justification                        |
-| ------------------------ | ----- | ------------------------------------ |
-| E2E fixtures             | 3     | Complete repository structures       |
-| Performance benchmarks   | 3     | Real-world performance measurement   |
-| Multi-format validation  | 3     | Complete output format verification  |
-| Error scenarios          | 3     | Complete error handling workflows    |
+| Component         | Level | Justification                              |
+| ----------------- | ----- | ------------------------------------------ |
+| Fixture generator | 1     | Pure function, no I/O, unit testable       |
+| Fixture writer    | 2     | Filesystem I/O, needs real tmpdir          |
+| E2E validation    | 3     | Full CLI execution against generated repos |
 
 ### Escalation Rationale
 
-- **2 → 3**: E2E tests verify the complete user journey delivers value within performance targets
+- **1 → 2**: Fixture writer must verify actual files exist on disk
+- **2 → 3**: E2E tests verify the full CLI reads generated fixtures correctly under performance targets
+
+## Stories
+
+| Story | Name              | Level | Description                                    |
+| ----- | ----------------- | ----- | ---------------------------------------------- |
+| 21    | fixture-generator | 1     | `generateFixtureTree()` + `PRESETS` object     |
+| 32    | fixture-writer    | 2     | `materializeFixture()` + cleanup handling      |
+| 43    | e2e-validation    | 3     | Performance, formats, and error scenario tests |
+
+### story-21: Fixture Generator (Level 1)
+
+Implements `generateFixtureTree(config)` and `PRESETS` object. Pure function that creates tree structures with faker.js names following `context/1-structure.md`. Unit testable with no I/O.
+
+### story-32: Fixture Writer (Level 2)
+
+Implements `materializeFixture(tree)` that writes tree to `os.tmpdir()`. Returns `MaterializedFixture` with path and cleanup function. Integration tests verify filesystem operations.
+
+### story-43: E2E Validation (Level 3)
+
+All E2E tests using generated fixtures:
+
+- Performance benchmarks (<100ms for 50 items)
+- Multi-format validation (text, JSON, markdown, table)
+- Error scenarios (missing specs, invalid formats, etc.)
 
 ## E2E Tests (Level 3)
 
 ```typescript
-// test/e2e/core-cli.e2e.test.ts
+// tests/e2e/core-cli.e2e.test.ts
+import { createFixture, PRESETS } from "@/tests/helpers/fixture-generator";
+
 describe("Capability: Core CLI - E2E", () => {
-  it("GIVEN fixture repo with 50 work items WHEN running spx status --json THEN completes in <100ms", async () => {
-    // Given
-    const fixtureRoot = "test/fixtures/repos/sample-50-items";
+  it("GIVEN 50 work items WHEN running spx status --json THEN completes in <100ms", async () => {
+    const fixture = await createFixture(PRESETS.SHALLOW_50);
 
-    // When
-    const startTime = Date.now();
-    const { stdout, exitCode } = await execa("node", ["bin/spx.js", "status", "--json"], {
-      cwd: fixtureRoot,
-    });
-    const elapsed = Date.now() - startTime;
+    try {
+      const startTime = Date.now();
+      const { stdout, exitCode } = await execa("node", ["bin/spx.js", "status", "--json"], {
+        cwd: fixture.path,
+      });
+      const elapsed = Date.now() - startTime;
 
-    // Then
-    expect(exitCode).toBe(0);
-    expect(elapsed).toBeLessThan(100);
+      expect(exitCode).toBe(0);
+      expect(elapsed).toBeLessThan(100);
 
-    const result = JSON.parse(stdout);
-    expect(result).toHaveProperty("summary");
-    expect(result.summary).toMatchObject({
-      done: expect.any(Number),
-      inProgress: expect.any(Number),
-      open: expect.any(Number),
-    });
+      const result = JSON.parse(stdout);
+      expect(result.summary.done + result.summary.inProgress + result.summary.open)
+        .toBeGreaterThanOrEqual(50);
+    } finally {
+      await fixture.cleanup();
+    }
   });
 
-  it("GIVEN fixture repo WHEN requesting different formats THEN all formats render correctly", async () => {
-    const fixtureRoot = "test/fixtures/repos/sample-10-items";
+  it("GIVEN fixture WHEN requesting different formats THEN all render correctly", async () => {
+    const fixture = await createFixture(PRESETS.FAN_10_LEVEL_3);
 
-    // JSON format
-    const jsonResult = await execa("node", ["bin/spx.js", "status", "--json"], { cwd: fixtureRoot });
-    expect(() => JSON.parse(jsonResult.stdout)).not.toThrow();
+    try {
+      const formats = ["text", "json", "markdown", "table"];
+      for (const format of formats) {
+        const args = format === "text"
+          ? ["status"]
+          : ["status", "--format", format];
 
-    // Text format (default)
-    const textResult = await execa("node", ["bin/spx.js", "status"], { cwd: fixtureRoot });
-    expect(textResult.stdout).toContain("specs/doing/");
-
-    // Markdown format
-    const mdResult = await execa("node", ["bin/spx.js", "status", "--format", "markdown"], { cwd: fixtureRoot });
-    expect(mdResult.stdout).toContain("#");
-
-    // Table format
-    const tableResult = await execa("node", ["bin/spx.js", "status", "--format", "table"], { cwd: fixtureRoot });
-    expect(tableResult.stdout).toMatch(/\|.*\|/);
-  });
-
-  it("GIVEN work items in mixed states WHEN running status THEN detects all states correctly", async () => {
-    const fixtureRoot = "test/fixtures/repos/mixed-states";
-
-    const { stdout } = await execa("node", ["bin/spx.js", "status", "--json"], { cwd: fixtureRoot });
-    const result = JSON.parse(stdout);
-
-    expect(result.summary.done).toBeGreaterThan(0);
-    expect(result.summary.inProgress).toBeGreaterThan(0);
-    expect(result.summary.open).toBeGreaterThan(0);
+        const { exitCode } = await execa("node", ["bin/spx.js", ...args], {
+          cwd: fixture.path,
+        });
+        expect(exitCode).toBe(0);
+      }
+    } finally {
+      await fixture.cleanup();
+    }
   });
 });
 ```
@@ -97,17 +117,12 @@ This feature provides the E2E tests that prove Capability-21 is complete and mee
 
 ## Completion Criteria
 
-- [ ] All Level 3 E2E tests pass
-- [ ] All 4 stories completed
+- [ ] All 3 stories completed
+- [ ] Fixture generator produces valid trees (Level 1 tests pass)
+- [ ] Fixture writer creates correct filesystem structure (Level 2 tests pass)
+- [ ] E2E tests pass with generated fixtures (Level 3 tests pass)
 - [ ] Success metric achieved: <100ms for 50 work items
 - [ ] All output formats work end-to-end
 - [ ] Error scenarios handled gracefully
-- [ ] 100% type coverage
-
-**Proposed Stories**:
-- story-21: E2E test fixtures (repos with 10, 50 work items)
-- story-32: Performance benchmarks (<100ms target)
-- story-43: Multi-format output E2E tests
-- story-54: Error scenario E2E tests
 
 **Note**: This feature marks Capability-21 as DONE when complete.

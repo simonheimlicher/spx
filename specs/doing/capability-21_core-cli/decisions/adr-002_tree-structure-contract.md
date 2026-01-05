@@ -33,16 +33,16 @@ Without a contract, these features cannot be developed independently.
 ```typescript
 // src/tree/types.ts
 export interface TreeNode {
-  kind: WorkItemKind;       // "capability" | "feature" | "story"
-  number: number;           // Internal BSP number
+  kind: WorkItemKind; // "capability" | "feature" | "story"
+  number: number; // Internal BSP number
   slug: string;
   path: string;
-  status: WorkItemStatus;   // "OPEN" | "IN_PROGRESS" | "DONE"
-  children: TreeNode[];     // BSP-sorted by Feature 54
+  status: WorkItemStatus; // "OPEN" | "IN_PROGRESS" | "DONE"
+  children: TreeNode[]; // BSP-sorted by Feature 54
 }
 
 export interface WorkItemTree {
-  nodes: TreeNode[];        // Root capabilities
+  nodes: TreeNode[]; // Root capabilities
 }
 ```
 
@@ -51,11 +51,13 @@ export interface WorkItemTree {
 Alternative considered: Separate types (CapabilityNode, FeatureNode, StoryNode)
 
 **Rejected because:**
+
 - All work items are structurally identical
 - Separate types create unnecessary complexity
 - Recursive operations are cleaner with a single type
 
 **Unified approach benefits:**
+
 - Simple: One interface for all node types
 - Flexible: Formatters use same recursion pattern for all levels
 - Type-safe: Discriminated by `kind` field
@@ -72,8 +74,9 @@ Alternative considered: Separate types (CapabilityNode, FeatureNode, StoryNode)
 ### BSP Sorting Responsibility
 
 **Feature 54** ensures children are sorted by BSP number:
+
 ```typescript
-children.sort((a, b) => a.number - b.number)
+children.sort((a, b) => a.number - b.number);
 ```
 
 **Feature 65** assumes children are pre-sorted and renders in order.
@@ -89,11 +92,13 @@ The unified TreeNode design creates a clean contract:
 ```
 
 **Expected Benefits:**
+
 - Independent development of Features 54 and 65
 - Simple testing: Feature 65 can use synthetic trees
 - Type-safe traversal with discriminated unions
 
 **Accepted Trade-offs:**
+
 - Formatters must check `kind` field to determine node type
 - Single interface means no compile-time guarantee that stories have no children
 
@@ -138,15 +143,15 @@ The unified TreeNode design creates a clean contract:
 
 ### Level Assignment
 
-| Component                  | Level           | Justification                                    |
-| -------------------------- | --------------- | ------------------------------------------------ |
-| TreeNode/WorkItemTree types | 0 (No tests)   | TypeScript interfaces, verified at compile time  |
-| Synthetic tree builders     | 1 (Unit)       | Pure functions creating test data                |
-| Text formatter             | 1 (Unit)       | Pure string rendering                            |
-| JSON formatter             | 1 (Unit)       | Pure data serialization                          |
-| Markdown formatter         | 1 (Unit)       | Pure string rendering                            |
-| Table formatter            | 1 (Unit)       | Pure string rendering                            |
-| Contract integration       | 2 (Integration) | Needs real trees from Feature 54                 |
+| Component                   | Level           | Justification                                   |
+| --------------------------- | --------------- | ----------------------------------------------- |
+| TreeNode/WorkItemTree types | 0 (No tests)    | TypeScript interfaces, verified at compile time |
+| Synthetic tree builders     | 1 (Unit)        | Pure functions creating test data               |
+| Text formatter              | 1 (Unit)        | Pure string rendering                           |
+| JSON formatter              | 1 (Unit)        | Pure data serialization                         |
+| Markdown formatter          | 1 (Unit)        | Pure string rendering                           |
+| Table formatter             | 1 (Unit)        | Pure string rendering                           |
+| Contract integration        | 2 (Integration) | Needs real trees from Feature 54                |
 
 ### Escalation Rationale
 
@@ -164,23 +169,27 @@ The unified TreeNode design creates a clean contract:
 ### Implementation Constraints
 
 **Feature 65 (Output Formatting)** must:
+
 1. Create synthetic tree builders in `tests/helpers/tree-builder.ts` (Level 1)
 2. Test all formatters with synthetic trees (Level 1)
 3. Write Level 1 tests in `specs/.../story-NN/tests/` (progress tests)
 4. Graduate tests to `tests/unit/reporter/` when story completes
 
 **Feature 54 (Tree Building)** must:
+
 1. Ensure BSP-sorted children (contract requirement)
 2. Provide integration test fixtures for Feature 65
 3. Verify contract compatibility in Level 2 tests
 
 **Integration** (when both features complete):
+
 1. Level 2 tests verify Feature 54's trees work with Feature 65's formatters
 2. Tests in `tests/integration/reporter/format.integration.test.ts`
 
 ### Compliance and Validation
 
 **Architecture Principles:**
+
 - [x] **Consistency**: Unified type follows project's preference for simple over complex
 - [x] **Simplicity**: Minimal contract - two interfaces only
 - [x] **Type Safety**: Full TypeScript typing with discriminated unions

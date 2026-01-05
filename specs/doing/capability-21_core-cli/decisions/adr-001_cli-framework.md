@@ -5,8 +5,8 @@
 ### Problem
 
 ```
-spx requires both simple command execution (spx status --json) and interactive 
-tree navigation (spx browse). We need a CLI framework that handles both modes 
+spx requires both simple command execution (spx status --json) and interactive
+tree navigation (spx browse). We need a CLI framework that handles both modes
 elegantly without over-engineering the simple cases.
 ```
 
@@ -100,7 +100,7 @@ spx has two distinct interaction modes:
 1. Fire-and-forget commands (status, next, done) — Commander handles perfectly
 2. Interactive navigation (browse, tree exploration) — Ink provides full TUI
 
-This combination keeps simple things simple while enabling complex interactivity 
+This combination keeps simple things simple while enabling complex interactivity
 without architectural changes. Clack may be added later for specific flows (spx init).
 ```
 
@@ -177,6 +177,6 @@ describe("CLI Framework Validation", () => {
 
 **Supporting Documentation:**
 
-- Commander.js: https://github.com/tj/commander.js
-- Ink: https://github.com/vadimdemedes/ink
-- Clack: https://github.com/bombshell-dev/clack
+- Commander.js: <https://github.com/tj/commander.js>
+- Ink: <https://github.com/vadimdemedes/ink>
+- Clack: <https://github.com/bombshell-dev/clack>
