@@ -72,11 +72,11 @@ capability-21_core-cli [IN PROGRESS]
 
 Status is computed deterministically from the `tests/` directory:
 
-| Condition | Status |
-|-----------|--------|
-| No `tests/` directory or empty | **OPEN** |
+| Condition                           | Status          |
+| ----------------------------------- | --------------- |
+| No `tests/` directory or empty      | **OPEN**        |
 | `tests/` has files but no `DONE.md` | **IN PROGRESS** |
-| `tests/DONE.md` exists | **DONE** |
+| `tests/DONE.md` exists              | **DONE**        |
 
 ## Work Item Structure
 
