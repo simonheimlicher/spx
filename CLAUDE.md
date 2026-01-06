@@ -48,6 +48,18 @@ Before committing ANY changes:
 - [ ] **`npm test`** shows 0 failed tests
 - [ ] **`npm run build`** succeeds
 
+### Committing Changes
+
+**ALWAYS use the `claude:committing-changes` skill to commit.** Never run raw git commands for commits.
+
+```bash
+# Correct: invoke the skill
+/claude:committing-changes
+
+# Wrong: manual git commands
+git add . && git commit -m "..."
+```
+
 ### Available Validation Commands
 
 | Command                       | Purpose                                   |
