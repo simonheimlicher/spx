@@ -862,7 +862,7 @@ function getTopLevelDirectoriesWithTypeScript(config: TypeScriptConfig): string[
   for (const dir of topLevelDirs) {
     // Check if directory is explicitly excluded
     const isExcluded = config.exclude?.some((pattern) => {
-      // Handle patterns like "context/**/*", "specs/**/*", "docs/**/*"
+      // Handle patterns like "specs/**/*", "docs/**/*"
       if (pattern.includes("/**")) {
         const dirPattern = pattern.split("/**")[0];
         return dirPattern === dir;

@@ -21,7 +21,7 @@
     "target": "ES2022",
     "types": ["node", "vitest/globals"]
   },
-  "exclude": ["node_modules", "dist", "context/**/*", "docs/**/*", "vite.config.mts"],
+  "exclude": ["node_modules", "dist", "docs/**/*", "vite.config.mts"],
   "include": ["src/**/*", "bin/**/*", "test/**/*", "specs/**/*"],
   // This tells ts-node to pre-load tsconfig-paths
   "ts-node": {
