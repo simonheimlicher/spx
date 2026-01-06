@@ -22,13 +22,13 @@
 1. **src/commands/next.ts** - Next command implementation
    - `findNextWorkItem(tree): TreeNode | null` - Pure selection logic
    - `nextCommand(options): Promise<string>` - Main orchestration function
-   - Selection priority: IN_PROGRESS > OPEN, lowest BSP number first
+   - Selection priority: BSP order is absolute, lowest number first regardless of status
    - Formats output with full context (capability > feature > story)
 
 2. **tests/unit/commands/next.test.ts** - Level 1 unit tests
    - 7 test cases covering selection logic
-   - Tests IN_PROGRESS priority over OPEN
-   - Tests lowest BSP number selection
+   - Tests BSP-first priority (status irrelevant)
+   - Tests lowest BSP number selection across all non-DONE items
    - Tests edge cases (all DONE, empty tree, no stories)
 
 3. **tests/integration/cli/next.integration.test.ts** - Level 2 integration tests
@@ -97,15 +97,14 @@ Next work item:
 
 ### Selection Algorithm
 
-The `findNextWorkItem()` function implements the priority-based selection:
+The `findNextWorkItem()` function implements BSP-first selection:
 
 1. **Collect all stories**: Recursively traverse tree to find all leaf nodes (stories)
-2. **Filter by status**: Separate into IN_PROGRESS and OPEN lists
-3. **Priority 1**: If IN_PROGRESS stories exist, return lowest numbered
-4. **Priority 2**: If only OPEN stories exist, return lowest numbered
-5. **All done**: Return null if no IN_PROGRESS or OPEN items
+2. **Filter non-DONE**: Keep only stories where status ≠ DONE
+3. **Sort by BSP**: Order by BSP number (lowest first)
+4. **Return first**: Return first item in sorted list, or null if empty
 
-This ensures work-in-progress is completed before starting new work, and within each category, stories are worked on in BSP order.
+BSP order is absolute - lower BSP number must complete first, regardless of whether the item is OPEN or IN_PROGRESS. Status is irrelevant to priority.
 
 ### Output Format
 
@@ -129,7 +128,7 @@ story-32_next-command is now COMPLETE.
 The next command successfully:
 
 - ✅ Finds next work item with correct priority (FR1)
-- ✅ Implements selection logic (IN_PROGRESS > OPEN, lowest BSP) (FR1)
+- ✅ Implements BSP-first selection logic (lowest BSP wins, status irrelevant) (FR1)
 - ✅ Shows helpful message when no items found (FR1)
 - ✅ Provides full context in output
 - ✅ Handles all edge cases gracefully

@@ -2,17 +2,17 @@
  * Level 1: Unit tests for next command logic
  * Story: story-32_next-command
  */
-import { describe, it, expect } from "vitest";
 import { findNextWorkItem } from "@/commands/next";
-import { createNode } from "../../helpers/tree-builder";
 import type { WorkItemTree } from "@/tree/types";
+import { describe, expect, it } from "vitest";
+import { createNode } from "../../helpers/tree-builder";
 
 describe("findNextWorkItem", () => {
   /**
    * Level 1: Pure selection logic tests
    */
 
-  it("GIVEN IN_PROGRESS and OPEN items WHEN finding next THEN returns IN_PROGRESS with lowest number", () => {
+  it("GIVEN IN_PROGRESS and OPEN items WHEN finding next THEN returns lowest BSP regardless of status", () => {
     // Given: Tree with IN_PROGRESS story-32 and OPEN story-21
     const inProgressStory = createNode("story", 32, "in-progress", "IN_PROGRESS");
     const openStory = createNode("story", 21, "open", "OPEN");
@@ -26,11 +26,10 @@ describe("findNextWorkItem", () => {
     // When
     const next = findNextWorkItem(tree);
 
-    // Then: Should return IN_PROGRESS story-32 (not the lower numbered OPEN story-21)
+    // Then: Should return story-21 (lowest BSP, status irrelevant)
     expect(next).not.toBeNull();
-    expect(next?.status).toBe("IN_PROGRESS");
-    expect(next?.number).toBe(32);
-    expect(next?.slug).toBe("in-progress");
+    expect(next?.number).toBe(21);
+    expect(next?.slug).toBe("open");
   });
 
   it("GIVEN multiple IN_PROGRESS items WHEN finding next THEN returns lowest numbered", () => {
@@ -110,10 +109,10 @@ describe("findNextWorkItem", () => {
     expect(next).toBeNull();
   });
 
-  it("GIVEN multiple capabilities WHEN finding next THEN searches all", () => {
-    // Given: Two capabilities, second has IN_PROGRESS story with lower number
-    const story21Cap1 = createNode("story", 43, "cap1-story", "OPEN");
-    const feat1 = createNode("feature", 21, "test1", "OPEN", [story21Cap1]);
+  it("GIVEN multiple capabilities WHEN finding next THEN searches all and returns lowest BSP", () => {
+    // Given: Two capabilities with stories at different BSP numbers
+    const story43Cap1 = createNode("story", 43, "cap1-story", "OPEN");
+    const feat1 = createNode("feature", 21, "test1", "OPEN", [story43Cap1]);
     const cap1 = createNode("capability", 20, "test1", "OPEN", [feat1]);
 
     const story21Cap2 = createNode("story", 21, "cap2-story", "IN_PROGRESS");
@@ -127,9 +126,8 @@ describe("findNextWorkItem", () => {
     // When
     const next = findNextWorkItem(tree);
 
-    // Then: Should return story-21 from cap2 (IN_PROGRESS, lowest number)
+    // Then: Should return story-21 from cap2 (lowest BSP number across all)
     expect(next).not.toBeNull();
-    expect(next?.status).toBe("IN_PROGRESS");
     expect(next?.number).toBe(21);
     expect(next?.slug).toBe("cap2-story");
   });

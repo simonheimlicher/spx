@@ -12,9 +12,10 @@ THEN output next work item to work on (lowest numbered OPEN or IN_PROGRESS)
 
 Selection logic:
 
-1. Prefer IN_PROGRESS over OPEN
-2. Within same status, choose lowest BSP number
-3. If none found, output message
+1. BSP order is absolute - lower BSP must complete first
+2. Return first item where status ≠ DONE
+3. Status (IN_PROGRESS vs OPEN) is irrelevant to priority
+4. If none found, output message
 
 #### Files created/modified
 
@@ -38,11 +39,11 @@ import { findNextWorkItem } from "@/commands/next";
 import { describe, expect, it } from "vitest";
 
 describe("findNextWorkItem", () => {
-  it("GIVEN IN_PROGRESS and OPEN items WHEN finding next THEN returns IN_PROGRESS with lowest number", () => {
+  it("GIVEN IN_PROGRESS and OPEN items WHEN finding next THEN returns lowest BSP regardless of status", () => {
     const tree = buildMixedTree();
     const next = findNextWorkItem(tree);
 
-    expect(next.status).toBe("IN_PROGRESS");
+    expect(next.number).toBe(21); // Lowest BSP wins, status irrelevant
   });
 
   it("GIVEN only OPEN items WHEN finding next THEN returns OPEN with lowest number", () => {

@@ -1,19 +1,15 @@
 /**
  * Next command implementation
  *
- * Finds the next work item to work on based on priority:
- * 1. IN_PROGRESS items first (already started)
- * 2. OPEN items second (not started)
- * 3. Within same status, lowest BSP number first
+ * Finds the next work item to work on based on BSP order:
+ * - BSP order is absolute - lower number must complete first
+ * - Status (IN_PROGRESS vs OPEN) is irrelevant to priority
+ * - Returns first non-DONE item in BSP order
  */
 import path from "path";
-import type { TreeNode, WorkItemTree } from "../tree/types.js";
-import {
-  walkDirectory,
-  filterWorkItemDirectories,
-  buildWorkItemList,
-} from "../scanner/walk.js";
+import { buildWorkItemList, filterWorkItemDirectories, walkDirectory } from "../scanner/walk.js";
 import { buildTree } from "../tree/build.js";
+import type { TreeNode, WorkItemTree } from "../tree/types.js";
 
 /**
  * Options for next command
@@ -27,9 +23,9 @@ export interface NextOptions {
  * Find the next work item to work on
  *
  * Priority order:
- * 1. IN_PROGRESS items (already started, should finish first)
- * 2. OPEN items (not started yet)
- * 3. Within same priority, lowest BSP number first (stories only)
+ * - BSP order is absolute - lower number must complete first
+ * - Status (IN_PROGRESS vs OPEN) is irrelevant to priority
+ * - Returns first non-DONE story in BSP order
  *
  * Only considers story-level work items (leaf nodes).
  *
@@ -40,7 +36,7 @@ export interface NextOptions {
  * ```typescript
  * const tree = buildTreeWithMixedStatus();
  * const next = findNextWorkItem(tree);
- * // => { kind: "story", number: 32, slug: "in-progress-story", status: "IN_PROGRESS", ... }
+ * // => { kind: "story", number: 21, slug: "lowest-bsp-story", status: "OPEN", ... }
  * ```
  */
 export function findNextWorkItem(tree: WorkItemTree): TreeNode | null {
@@ -52,24 +48,14 @@ export function findNextWorkItem(tree: WorkItemTree): TreeNode | null {
     return null;
   }
 
-  // Filter to IN_PROGRESS and OPEN stories only
-  const inProgressStories = stories.filter(
-    (story) => story.status === "IN_PROGRESS"
-  );
-  const openStories = stories.filter((story) => story.status === "OPEN");
+  // Filter to non-DONE stories, sorted by BSP number
+  // BSP order is absolute - lower number must complete first, regardless of status
+  const pending = stories
+    .filter((story) => story.status !== "DONE")
+    .sort((a, b) => a.number - b.number);
 
-  // Priority 1: IN_PROGRESS stories, lowest number first
-  if (inProgressStories.length > 0) {
-    return inProgressStories.sort((a, b) => a.number - b.number)[0];
-  }
-
-  // Priority 2: OPEN stories, lowest number first
-  if (openStories.length > 0) {
-    return openStories.sort((a, b) => a.number - b.number)[0];
-  }
-
-  // All stories are DONE
-  return null;
+  // Return first non-DONE item (lowest BSP wins regardless of status)
+  return pending[0] ?? null;
 }
 
 /**
@@ -155,7 +141,9 @@ export async function nextCommand(options: NextOptions = {}): Promise<string> {
 
   if (parents.capability && parents.feature) {
     lines.push(
-      `  ${formatWorkItemName(parents.capability)} > ${formatWorkItemName(parents.feature)} > ${formatWorkItemName(next)}`
+      `  ${formatWorkItemName(parents.capability)} > ${formatWorkItemName(parents.feature)} > ${
+        formatWorkItemName(next)
+      }`,
     );
   } else {
     lines.push(`  ${formatWorkItemName(next)}`);
@@ -177,7 +165,7 @@ export async function nextCommand(options: NextOptions = {}): Promise<string> {
  */
 function findParents(
   nodes: TreeNode[],
-  target: TreeNode
+  target: TreeNode,
 ): { capability?: TreeNode; feature?: TreeNode } {
   for (const capability of nodes) {
     for (const feature of capability.children) {
