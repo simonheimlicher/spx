@@ -2,10 +2,10 @@
  * Level 2: Integration tests for CLI error handling
  * Story: story-54_error-handling
  */
-import { describe, it, expect } from "vitest";
 import { execa } from "execa";
 import path from "path";
 import { fileURLToPath } from "url";
+import { describe, expect, it } from "vitest";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -99,8 +99,8 @@ describe("CLI Error Messages", () => {
     // Given: Non-existent directory
     const cwd = path.join(__dirname, "../../fixtures/repos/no-specs");
 
-    // When
-    const result = await execa("node", [CLI_PATH, "status"], {
+    // When: Using scoped command (not deprecated alias)
+    const result = await execa("node", [CLI_PATH, "spec", "status"], {
       cwd,
       reject: false,
     });
@@ -113,19 +113,19 @@ describe("CLI Error Messages", () => {
     // Given: Invalid format
     const cwd = path.join(__dirname, "../../fixtures/repos/simple");
 
-    // When
+    // When: Using scoped command (not deprecated alias)
     const result = await execa(
       "node",
-      [CLI_PATH, "status", "--format", "xml"],
+      [CLI_PATH, "spec", "status", "--format", "xml"],
       {
         cwd,
         reject: false,
-      }
+      },
     );
 
     // Then
     expect(result.exitCode).toBe(1);
-    expect(result.stderr).toContain('Invalid format "xml"');
+    expect(result.stderr).toContain("Invalid format \"xml\"");
     expect(result.stderr).toContain("text, json, markdown, table");
   });
 });

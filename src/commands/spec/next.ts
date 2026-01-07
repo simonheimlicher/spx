@@ -7,9 +7,9 @@
  * - Returns first non-DONE item in BSP order
  */
 import path from "path";
-import { buildWorkItemList, filterWorkItemDirectories, walkDirectory } from "../scanner/walk.js";
-import { buildTree } from "../tree/build.js";
-import type { TreeNode, WorkItemTree } from "../tree/types.js";
+import { buildWorkItemList, filterWorkItemDirectories, walkDirectory } from "../../scanner/walk.js";
+import { buildTree } from "../../tree/build.js";
+import type { TreeNode, WorkItemTree } from "../../tree/types.js";
 
 /**
  * Options for next command

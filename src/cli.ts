@@ -2,46 +2,54 @@
  * CLI entry point for spx
  */
 import { Command } from "commander";
-import { statusCommand, type OutputFormat } from "./commands/status.js";
-import { nextCommand } from "./commands/next.js";
+import type { OutputFormat } from "./commands/spec/status.js";
+import { specDomain } from "./domains/spec/index.js";
 
 const program = new Command();
 
 program
   .name("spx")
   .description("Fast, deterministic CLI tool for spec workflow management")
-  .version("0.1.0");
+  .version("0.2.0"); // Bump version for domain-scoped architecture
 
+// Register spec domain
+specDomain.register(program);
+
+// Backward compatibility: Root command aliases (deprecated)
 program
   .command("status")
-  .description("Get project status")
+  .description("(deprecated) Use 'spx spec status' instead")
   .option("--json", "Output as JSON")
   .option("--format <format>", "Output format (text|json|markdown|table)")
   .action(async (options: { json?: boolean; format?: string }) => {
+    // Show deprecation warning to stderr
+    console.warn("⚠️  Deprecated: Use 'spx spec status' instead");
+    console.warn("   This alias will be removed in v2.0.0\n");
+
+    // Delegate to spec domain status command
     try {
-      // Determine format: --json flag overrides --format option
       let format: OutputFormat = "text";
       if (options.json) {
         format = "json";
       } else if (options.format) {
-        // Validate format option
         const validFormats = ["text", "json", "markdown", "table"];
         if (validFormats.includes(options.format)) {
           format = options.format as OutputFormat;
         } else {
           console.error(
-            `Error: Invalid format "${options.format}". Must be one of: ${validFormats.join(", ")}`
+            `Error: Invalid format "${options.format}". Must be one of: ${validFormats.join(", ")}`,
           );
           process.exit(1);
         }
       }
 
+      const { statusCommand } = await import("./commands/spec/status.js");
       const output = await statusCommand({ cwd: process.cwd(), format });
       console.log(output);
     } catch (error) {
       console.error(
         "Error:",
-        error instanceof Error ? error.message : String(error)
+        error instanceof Error ? error.message : String(error),
       );
       process.exit(1);
     }
@@ -49,15 +57,21 @@ program
 
 program
   .command("next")
-  .description("Find next work item to work on")
+  .description("(deprecated) Use 'spx spec next' instead")
   .action(async () => {
+    // Show deprecation warning to stderr
+    console.warn("⚠️  Deprecated: Use 'spx spec next' instead");
+    console.warn("   This alias will be removed in v2.0.0\n");
+
+    // Delegate to spec domain next command
     try {
+      const { nextCommand } = await import("./commands/spec/next.js");
       const output = await nextCommand({ cwd: process.cwd() });
       console.log(output);
     } catch (error) {
       console.error(
         "Error:",
-        error instanceof Error ? error.message : String(error)
+        error instanceof Error ? error.message : String(error),
       );
       process.exit(1);
     }

@@ -2,7 +2,7 @@
  * Level 1: Unit tests for next command logic
  * Story: story-32_next-command
  */
-import { findNextWorkItem } from "@/commands/next";
+import { findNextWorkItem } from "@/commands/spec/next";
 import type { WorkItemTree } from "@/tree/types";
 import { describe, expect, it } from "vitest";
 import { createNode } from "../../helpers/tree-builder";

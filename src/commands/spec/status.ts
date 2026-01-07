@@ -8,16 +8,12 @@
  * 4. Output Formatting (Feature 65) - Format in specified format
  */
 import path from "path";
-import {
-  walkDirectory,
-  filterWorkItemDirectories,
-  buildWorkItemList,
-} from "../scanner/walk.js";
-import { buildTree } from "../tree/build.js";
-import { formatText } from "../reporter/text.js";
-import { formatJSON } from "../reporter/json.js";
-import { formatMarkdown } from "../reporter/markdown.js";
-import { formatTable } from "../reporter/table.js";
+import { formatJSON } from "../../reporter/json.js";
+import { formatMarkdown } from "../../reporter/markdown.js";
+import { formatTable } from "../../reporter/table.js";
+import { formatText } from "../../reporter/text.js";
+import { buildWorkItemList, filterWorkItemDirectories, walkDirectory } from "../../scanner/walk.js";
+import { buildTree } from "../../tree/build.js";
 
 /**
  * Supported output formats
@@ -54,7 +50,7 @@ export interface StatusOptions {
  * ```
  */
 export async function statusCommand(
-  options: StatusOptions = {}
+  options: StatusOptions = {},
 ): Promise<string> {
   const cwd = options.cwd || process.cwd();
   const format = options.format || "text";
