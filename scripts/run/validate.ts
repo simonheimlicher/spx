@@ -41,7 +41,7 @@
  */
 
 import chalk from "chalk";
-import { spawn } from "child_process";
+import { type ChildProcess, spawn, type SpawnOptions } from "child_process";
 import { Command } from "commander";
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "fs";
 import { mkdtemp } from "fs/promises";
@@ -51,6 +51,18 @@ import { tmpdir } from "os";
 import path, { extname, isAbsolute, join, resolve } from "path";
 import { performance } from "perf_hooks";
 import { fileURLToPath } from "url";
+
+// =============================================================================
+// DEPENDENCY INJECTION INTERFACES
+// =============================================================================
+
+/**
+ * @internal
+ * Interface for subprocess execution - enables dependency injection for testing
+ */
+export interface ProcessRunner {
+  spawn(command: string, args: readonly string[], options?: SpawnOptions): ChildProcess;
+}
 
 // =============================================================================
 // COLOR HELPERS (Vitest-style)
@@ -149,10 +161,11 @@ interface HookInput {
 }
 
 /**
+ * @internal
  * Parse stdin JSON for Claude Code hook integration.
  * Returns file path from hook input or null if not available.
  */
-async function parseStdinJson(): Promise<string | null> {
+export async function parseStdinJson(): Promise<string | null> {
   return new Promise((resolve) => {
     let data = "";
     let resolved = false;
@@ -291,6 +304,41 @@ interface TimingData {
 
 interface ValidationTimings {
   [stepId: string]: TimingData;
+}
+
+// =============================================================================
+// PURE ARGUMENT BUILDER FUNCTIONS
+// =============================================================================
+
+/**
+ * @internal
+ * Build ESLint CLI arguments based on validation context
+ */
+export function buildEslintArgs(context: {
+  validatedFiles?: string[];
+  mode?: ExecutionMode;
+  cacheFile: string;
+}): string[] {
+  const { validatedFiles, mode, cacheFile } = context;
+  const fixArg = mode === EXECUTION_MODES.WRITE ? ["--fix"] : [];
+  const cacheArgs = ["--cache", "--cache-location", cacheFile];
+
+  if (validatedFiles && validatedFiles.length > 0) {
+    return ["eslint", "--config", "eslint.config.ts", ...cacheArgs, ...fixArg, "--", ...validatedFiles];
+  }
+  return ["eslint", ".", "--config", "eslint.config.ts", ...cacheArgs, ...fixArg];
+}
+
+/**
+ * @internal
+ * Build TypeScript CLI arguments based on validation scope
+ */
+export function buildTypeScriptArgs(context: {
+  scope: ValidationScope;
+  configFile: string;
+}): string[] {
+  const { scope, configFile } = context;
+  return scope === VALIDATION_SCOPES.FULL ? ["tsc", "--noEmit"] : ["tsc", "--project", configFile];
 }
 
 // =============================================================================
@@ -694,9 +742,10 @@ function findTypeScriptFilesInDirectory(dirPath: string): string[] {
 }
 
 /**
+ * @internal
  * Validate and expand file/directory arguments into TypeScript files
  */
-function validateAndExpandFilePaths(paths: string[]): string[] {
+export function validateAndExpandFilePaths(paths: string[]): string[] {
   if (paths.length === 0) {
     return [];
   }
@@ -929,8 +978,12 @@ function getTypeScriptScope(mode: ValidationScope): ScopeConfig {
 
 /**
  * Validate ESLint compliance using automatic TypeScript scope alignment
+ * @param runner - Injectable process runner for testing (defaults to real spawn)
  */
-async function validateESLint(context: ValidationContext): Promise<{
+async function validateESLint(
+  context: ValidationContext,
+  runner: ProcessRunner = { spawn },
+): Promise<{
   success: boolean;
   error?: string;
 }> {
@@ -980,7 +1033,7 @@ async function validateESLint(context: ValidationContext): Promise<{
       log.debug(`🎯 Using TypeScript-derived scope: ${scopeConfig.directories.join(", ")}`);
     }
 
-    const eslintProcess = spawn("npx", eslintArgs, {
+    const eslintProcess = runner.spawn("npx", eslintArgs, {
       cwd: process.cwd(),
       stdio: "inherit", // Preserve colored output and interactivity
     });
@@ -1014,6 +1067,7 @@ async function validateESLint(context: ValidationContext): Promise<{
 async function validateCircularDependencies(
   mode: ValidationScope,
   typescriptScope: ScopeConfig,
+  _runner: ProcessRunner = { spawn },
 ): Promise<{
   success: boolean;
   error?: string;
@@ -1194,6 +1248,7 @@ async function validateTypeScript(
   mode: ValidationScope,
   typescriptScope: ScopeConfig,
   files?: string[],
+  runner: ProcessRunner = { spawn },
 ): Promise<{
   success: boolean;
   error?: string;
@@ -1217,7 +1272,7 @@ async function validateTypeScript(
 
     try {
       return new Promise((resolve) => {
-        const tscProcess = spawn("npx", ["tsc", "--project", configPath], {
+        const tscProcess = runner.spawn("npx", ["tsc", "--project", configPath], {
           cwd: process.cwd(),
           stdio: "inherit", // Preserve colored TypeScript output
         });
@@ -1254,7 +1309,7 @@ async function validateTypeScript(
   }
 
   return new Promise((resolve) => {
-    const tscProcess = spawn(tool, tscArgs, {
+    const tscProcess = runner.spawn(tool, tscArgs, {
       cwd: process.cwd(),
       stdio: "inherit", // Preserve colored TypeScript output
     });
