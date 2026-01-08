@@ -31,7 +31,7 @@ jobs:
         (github.event_name == 'pull_request_review' && contains(github.event.review.body, vars.CLAUDE_MENTION_TRIGGER || '@claude') &&
          contains(fromJSON(vars.CLAUDE_AUTHORIZED_ROLES || '["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.review.author_association)) ||
         (github.event_name == 'issues' && (contains(github.event.issue.body, vars.CLAUDE_MENTION_TRIGGER || '@claude') || contains(github.event.issue.title, vars.CLAUDE_MENTION_TRIGGER || '@claude')) &&
-         contains(fromJSON(vars.CLAUDE_AUTHORIZED_ROLES || '["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.sender.author_association))
+         contains(fromJSON(vars.CLAUDE_AUTHORIZED_ROLES || '["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.issue.author_association))
       )
     runs-on: ubuntu-latest
     permissions:
