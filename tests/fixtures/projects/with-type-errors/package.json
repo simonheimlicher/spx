@@ -1,0 +1,6 @@
+{
+  "name": "fixture-with-type-errors",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Minimal fixture project with intentional TypeScript errors"
+}
