@@ -14,16 +14,12 @@ export default defineConfig({
     environment: "node",
     include: ["tests/**/*.test.ts", "specs/**/*.test.ts"],
     exclude: ["tests/fixtures/**/*.test.ts"],
+    // Use forks instead of threads for integration tests that need process.chdir()
+    pool: "forks",
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],
-      exclude: [
-        "node_modules/",
-        "tests/",
-        "dist/",
-        "**/*.test.ts",
-        "**/*.config.ts",
-      ],
+      exclude: ["node_modules/", "tests/", "dist/", "**/*.test.ts", "**/*.config.ts"],
     },
   },
 });

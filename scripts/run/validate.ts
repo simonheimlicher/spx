@@ -43,7 +43,15 @@
 import chalk from "chalk";
 import { type ChildProcess, spawn, type SpawnOptions } from "child_process";
 import { Command } from "commander";
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "fs";
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "fs";
 import { mkdtemp } from "fs/promises";
 import * as JSONC from "jsonc-parser";
 import madge from "madge";
@@ -107,10 +115,12 @@ let outputMode: OutputMode = OUTPUT_MODES.HUMAN;
  */
 const log = {
   /** Always shown - errors and failures (agent needs to fix these) */
-  error: (message?: string, ...optionalParams: unknown[]) => console.error(message, ...optionalParams),
+  error: (message?: string, ...optionalParams: unknown[]) =>
+    console.error(message, ...optionalParams),
 
   /** Always shown - warnings */
-  warn: (message?: string, ...optionalParams: unknown[]) => console.error(message, ...optionalParams),
+  warn: (message?: string, ...optionalParams: unknown[]) =>
+    console.error(message, ...optionalParams),
 
   /** Result/status messages - suppressed in AGENT mode (exit code is sufficient) */
   result: (message?: string, ...optionalParams: unknown[]) => {
@@ -179,7 +189,8 @@ export async function parseStdinJson(): Promise<string | null> {
       }
       try {
         const input: HookInput = JSON.parse(data);
-        const filePath = input.tool_input?.file_path || input.tool_input?.path || input.tool_input?.notebook_path;
+        const filePath =
+          input.tool_input?.file_path || input.tool_input?.path || input.tool_input?.notebook_path;
         resolve(filePath || null);
       } catch {
         resolve(null);
@@ -217,7 +228,7 @@ export const VALIDATION_SCOPES = {
   FULL: "full" as const,
   PRODUCTION: "production" as const,
 } as const;
-type ValidationScope = (typeof VALIDATION_SCOPES)[keyof typeof VALIDATION_SCOPES];
+export type ValidationScope = (typeof VALIDATION_SCOPES)[keyof typeof VALIDATION_SCOPES];
 
 const TSCONFIG_FILES = {
   [VALIDATION_SCOPES.FULL]: "tsconfig.json",
@@ -255,7 +266,7 @@ interface CliOptions {
 // TYPES AND INTERFACES
 // =============================================================================
 
-interface ScopeConfig {
+export interface ScopeConfig {
   directories: string[];
   filePatterns: string[];
   excludePatterns: string[];
@@ -271,7 +282,7 @@ interface TypeScriptConfig {
 // NEW ARCHITECTURE: STEP-BASED VALIDATION SYSTEM
 // =============================================================================
 
-interface ValidationContext {
+export interface ValidationContext {
   projectRoot: string;
   mode?: ExecutionMode;
   scope: ValidationScope;
@@ -281,7 +292,7 @@ interface ValidationContext {
   isFileSpecificMode: boolean;
 }
 
-interface ValidationStepResult {
+export interface ValidationStepResult {
   success: boolean;
   error?: string;
   duration: number;
@@ -324,7 +335,15 @@ export function buildEslintArgs(context: {
   const cacheArgs = ["--cache", "--cache-location", cacheFile];
 
   if (validatedFiles && validatedFiles.length > 0) {
-    return ["eslint", "--config", "eslint.config.ts", ...cacheArgs, ...fixArg, "--", ...validatedFiles];
+    return [
+      "eslint",
+      "--config",
+      "eslint.config.ts",
+      ...cacheArgs,
+      ...fixArg,
+      "--",
+      ...validatedFiles,
+    ];
   }
   return ["eslint", ".", "--config", "eslint.config.ts", ...cacheArgs, ...fixArg];
 }
@@ -386,7 +405,8 @@ function getEstimatedDuration(stepId: string): number {
 
   // Calculate moving average of recent runs
   const recentDurations = timingData.durations.slice(-5); // Last 5 runs
-  const average = recentDurations.reduce((sum, duration) => sum + duration, 0) / recentDurations.length;
+  const average =
+    recentDurations.reduce((sum, duration) => sum + duration, 0) / recentDurations.length;
   return Math.round(average);
 }
 
@@ -451,7 +471,8 @@ function startValidationStep(step: ValidationStep): void {
   const totalSteps = progressSteps.length;
 
   const estimatedDuration = getEstimatedDuration(step.id);
-  const estimatedText = estimatedDuration > 0 ? colors.dim(` (~${Math.ceil(estimatedDuration / 1000)}s)`) : "";
+  const estimatedText =
+    estimatedDuration > 0 ? colors.dim(` (~${Math.ceil(estimatedDuration / 1000)}s)`) : "";
 
   log.info(`🔄 Step ${stepNumber} of ${totalSteps}: ${step.description}${estimatedText}`);
 }
@@ -522,9 +543,9 @@ function completeValidationProgress(allResults: ValidationStepResult[]): boolean
     return false;
   } else {
     log.info(
-      "\n"
-        + colors.bold(colors.success(`✅ Build-time validation PASSED`))
-        + colors.dim(` (${successCount} steps completed)`),
+      "\n" +
+        colors.bold(colors.success(`✅ Build-time validation PASSED`)) +
+        colors.dim(` (${successCount} steps completed)`),
     );
     return true;
   }
@@ -595,7 +616,8 @@ const circularDependencyStep: ValidationStep = {
   id: "circular-deps",
   name: "Circular Dependencies",
   description: "Checking for circular dependencies",
-  enabled: (context) => !context.isFileSpecificMode && context.enabledValidations.TYPESCRIPT === true,
+  enabled: (context) =>
+    !context.isFileSpecificMode && context.enabledValidations.TYPESCRIPT === true,
   execute: async (context) => {
     const startTime = performance.now();
     try {
@@ -620,9 +642,9 @@ const knipStep: ValidationStep = {
   name: "Unused Code",
   description: "Detecting unused exports, dependencies, and files",
   enabled: (context) =>
-    context.enabledValidations.KNIP === true
-    && validationEnabled(VALIDATION_KEYS.KNIP)
-    && !context.isFileSpecificMode,
+    context.enabledValidations.KNIP === true &&
+    validationEnabled(VALIDATION_KEYS.KNIP) &&
+    !context.isFileSpecificMode,
   execute: async (context) => {
     const startTime = performance.now();
     try {
@@ -646,7 +668,8 @@ const eslintStep: ValidationStep = {
   id: "eslint",
   name: "ESLint",
   description: "Validating ESLint compliance",
-  enabled: (context) => context.enabledValidations.ESLINT === true && validationEnabled(VALIDATION_KEYS.ESLINT),
+  enabled: (context) =>
+    context.enabledValidations.ESLINT === true && validationEnabled(VALIDATION_KEYS.ESLINT),
   execute: async (context: ValidationContext) => {
     const startTime = performance.now();
     try {
@@ -670,7 +693,8 @@ const typescriptStep: ValidationStep = {
   id: "typescript",
   name: "TypeScript",
   description: "Validating TypeScript",
-  enabled: (context) => context.enabledValidations.TYPESCRIPT === true && validationEnabled(VALIDATION_KEYS.TYPESCRIPT),
+  enabled: (context) =>
+    context.enabledValidations.TYPESCRIPT === true && validationEnabled(VALIDATION_KEYS.TYPESCRIPT),
   execute: async (context) => {
     const startTime = performance.now();
     try {
@@ -954,7 +978,7 @@ function getValidationDirectories(mode: ValidationScope): string[] {
 /**
  * Get authoritative validation scope (separate from production configuration)
  */
-function getTypeScriptScope(mode: ValidationScope): ScopeConfig {
+export function getTypeScriptScope(mode: ValidationScope): ScopeConfig {
   log.info(`🔍 Resolving validation scope for ${mode} mode...`);
 
   // Use validation-focused directory selection, not production configuration
@@ -980,7 +1004,7 @@ function getTypeScriptScope(mode: ValidationScope): ScopeConfig {
  * Validate ESLint compliance using automatic TypeScript scope alignment
  * @param runner - Injectable process runner for testing (defaults to real spawn)
  */
-async function validateESLint(
+export async function validateESLint(
   context: ValidationContext,
   runner: ProcessRunner = { spawn },
 ): Promise<{
@@ -996,11 +1020,13 @@ async function validateESLint(
     if (!validatedFiles || validatedFiles.length === 0) {
       if (scope === VALIDATION_SCOPES.PRODUCTION) {
         // Production-only scope: match TypeScript scope
-        logMessage = "🔄 Running ESLint validation (production scope - matching TypeScript scope)...";
+        logMessage =
+          "🔄 Running ESLint validation (production scope - matching TypeScript scope)...";
         process.env.ESLINT_PRODUCTION_ONLY = "1"; // Signal production mode
       } else {
         // Full scope: match TypeScript full validation
-        logMessage = "🔄 Running ESLint validation (full scope - matching TypeScript validation)...";
+        logMessage =
+          "🔄 Running ESLint validation (full scope - matching TypeScript validation)...";
         delete process.env.ESLINT_PRODUCTION_ONLY; // Ensure it's not set
       }
     } else {
@@ -1064,7 +1090,7 @@ async function validateESLint(
 /**
  * Validate circular dependencies using TypeScript-derived scope
  */
-async function validateCircularDependencies(
+export async function validateCircularDependencies(
   mode: ValidationScope,
   typescriptScope: ScopeConfig,
   _runner: ProcessRunner = { spawn },
@@ -1255,7 +1281,7 @@ async function createFileSpecificTsconfig(
 /**
  * Validate TypeScript using authoritative configuration
  */
-async function validateTypeScript(
+export async function validateTypeScript(
   mode: ValidationScope,
   typescriptScope: ScopeConfig,
   files?: string[],
@@ -1313,7 +1339,8 @@ async function validateTypeScript(
   } else {
     // Full validation using tsc
     tool = "npx";
-    tscArgs = mode === VALIDATION_SCOPES.FULL ? ["tsc", "--noEmit"] : ["tsc", "--project", configFile];
+    tscArgs =
+      mode === VALIDATION_SCOPES.FULL ? ["tsc", "--noEmit"] : ["tsc", "--project", configFile];
     logMessage = `🔄 TypeScript validation: ${mode} scope using ${configFile}`;
     log.step(logMessage);
     log.debug(`🎯 Validating directories: ${typescriptScope.directories.join(", ")}`);
@@ -1417,7 +1444,8 @@ async function validate(
 
   // Prepare validation context
   const projectRoot = process.cwd();
-  const validatedFiles = (filePaths && filePaths?.length > 0 && validateAndExpandFilePaths(filePaths)) || [];
+  const validatedFiles =
+    (filePaths && filePaths?.length > 0 && validateAndExpandFilePaths(filePaths)) || [];
   const isFileSpecificMode = validatedFiles && validatedFiles?.length > 0;
   const mode = getValidationScope(options);
   const enabledValidations = getEnabledValidations(verb);
@@ -1446,18 +1474,18 @@ async function validate(
   if (isFileSpecificMode) {
     const fileCount = validatedFiles.length;
     log.info(
-      colors.bold(colors.info(`🎯 File-specific validation:`))
-        + " "
-        + colors.dim(`${fileCount} file${fileCount > 1 ? "s" : ""}`),
+      colors.bold(colors.info(`🎯 File-specific validation:`)) +
+        " " +
+        colors.dim(`${fileCount} file${fileCount > 1 ? "s" : ""}`),
     );
     log.debug(`📄 Files: ${validatedFiles.join(", ")}`);
   } else {
     log.info(
       colors.bold(
-        colors.dim(`🔍 Validation verb: `)
-          + colors.info(verb as string)
-          + colors.dim(` Scope: `)
-          + colors.info(mode),
+        colors.dim(`🔍 Validation verb: `) +
+          colors.info(verb as string) +
+          colors.dim(` Scope: `) +
+          colors.info(mode),
       ),
     );
   }

@@ -1,0 +1,65 @@
+/**
+ * Integration Tests for validateCircularDependencies()
+ *
+ * These tests CALL THE ACTUAL FUNCTION validateCircularDependencies() with real madge on fixture projects.
+ * They verify that validate.ts correctly detects and reports circular dependencies.
+ */
+
+import {
+  getTypeScriptScope,
+  validateCircularDependencies,
+  VALIDATION_SCOPES,
+} from "@scripts/run/validate";
+import { FIXTURES, withTestEnv } from "@test/harness/test-env";
+import { describe, expect, it } from "vitest";
+
+describe("validateCircularDependencies() integration", () => {
+  describe("GIVEN fixture with circular dependencies", () => {
+    it("WHEN validating THEN detects circular imports", async () => {
+      await withTestEnv({ fixture: FIXTURES.WITH_CIRCULAR_DEPS }, async ({ path }) => {
+        // Change to fixture directory for madge analysis
+        const originalCwd = process.cwd();
+        process.chdir(path);
+
+        try {
+          const scopeConfig = getTypeScriptScope(VALIDATION_SCOPES.FULL);
+
+          // CALL THE ACTUAL FUNCTION
+          const result = await validateCircularDependencies(VALIDATION_SCOPES.FULL, scopeConfig);
+
+          // VERIFY BEHAVIOR
+          expect(result.success).toBe(false);
+          expect(result.error).toBeDefined();
+          // Error should mention circular dependencies
+          expect(result.error).toMatch(/circular/i);
+
+          // Should report the circular dependencies found
+          expect(result.circularDependencies).toBeDefined();
+          expect(result.circularDependencies).not.toHaveLength(0);
+        } finally {
+          process.chdir(originalCwd);
+        }
+      });
+    }, 15000); // Longer timeout for real madge execution
+  });
+
+  describe("GIVEN clean project", () => {
+    it("WHEN validating THEN passes with no circular dependencies", async () => {
+      await withTestEnv({ fixture: FIXTURES.CLEAN_PROJECT }, async ({ path }) => {
+        const originalCwd = process.cwd();
+        process.chdir(path);
+
+        try {
+          const scopeConfig = getTypeScriptScope(VALIDATION_SCOPES.FULL);
+
+          const result = await validateCircularDependencies(VALIDATION_SCOPES.FULL, scopeConfig);
+
+          expect(result.success).toBe(true);
+          expect(result.error).toBeUndefined();
+        } finally {
+          process.chdir(originalCwd);
+        }
+      });
+    }, 15000);
+  });
+});
