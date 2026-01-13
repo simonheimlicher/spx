@@ -1,0 +1,66 @@
+/**
+ * Session type definitions for the session management domain.
+ *
+ * @module session/types
+ */
+
+/**
+ * Priority levels for session ordering.
+ * Sessions are sorted: high → medium → low
+ */
+export type SessionPriority = "high" | "medium" | "low";
+
+/**
+ * Status derived from directory location per ADR-21.
+ */
+export type SessionStatus = "todo" | "doing" | "archive";
+
+/**
+ * Priority sort order (lower number = higher priority).
+ */
+export const PRIORITY_ORDER: Record<SessionPriority, number> = {
+  high: 0,
+  medium: 1,
+  low: 2,
+} as const;
+
+/**
+ * Default priority when not specified in YAML front matter.
+ */
+export const DEFAULT_PRIORITY: SessionPriority = "medium";
+
+/**
+ * Metadata extracted from session YAML front matter.
+ */
+export interface SessionMetadata {
+  /** Session ID (from filename or YAML) */
+  id?: string;
+  /** Priority level for sorting */
+  priority: SessionPriority;
+  /** Free-form tags for filtering */
+  tags: string[];
+  /** Git branch associated with session */
+  branch?: string;
+  /** Spec files to auto-inject on pickup */
+  specs?: string[];
+  /** Code files to auto-inject on pickup */
+  files?: string[];
+  /** ISO 8601 timestamp when session was created */
+  createdAt?: string;
+  /** Working directory path */
+  workingDirectory?: string;
+}
+
+/**
+ * Complete session information including status and metadata.
+ */
+export interface Session {
+  /** Session ID (timestamp format: YYYY-MM-DD_HH-mm-ss) */
+  id: string;
+  /** Status derived from directory location */
+  status: SessionStatus;
+  /** Metadata from YAML front matter */
+  metadata: SessionMetadata;
+  /** Full path to session file */
+  path: string;
+}
