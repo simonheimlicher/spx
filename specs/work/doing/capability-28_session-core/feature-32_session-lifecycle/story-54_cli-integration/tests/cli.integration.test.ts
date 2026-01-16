@@ -47,7 +47,7 @@ describe("spx session commands", () => {
       expect(stdout).toContain("release");
       expect(stdout).toContain("list");
       expect(stdout).toContain("show");
-      expect(stdout).toContain("create");
+      expect(stdout).toContain("handoff");
       expect(stdout).toContain("delete");
     });
   });
@@ -130,7 +130,7 @@ describe("spx session commands", () => {
   });
 
   describe("spx session pickup", () => {
-    it("GIVEN session in todo WHEN pickup THEN moves to doing", async () => {
+    it("GIVEN session in todo WHEN pickup THEN moves to doing with PICKUP_ID tag", async () => {
       const sessionId = "2026-01-13_08-00-00";
       await writeFile(
         join(sessionsDir, "todo", `${sessionId}.md`),
@@ -144,11 +144,11 @@ describe("spx session commands", () => {
       );
 
       expect(exitCode).toBe(0);
-      expect(stdout).toContain(`Claimed session: ${sessionId}`);
+      expect(stdout).toContain(`<PICKUP_ID>${sessionId}</PICKUP_ID>`);
       expect(stdout).toContain("Status: doing");
     });
 
-    it("GIVEN sessions in todo WHEN pickup --auto THEN claims highest priority", async () => {
+    it("GIVEN sessions in todo WHEN pickup --auto THEN claims highest priority with PICKUP_ID tag", async () => {
       // Create sessions with different priorities
       await writeFile(
         join(sessionsDir, "todo", "2026-01-13_08-00-00.md"),
@@ -166,7 +166,7 @@ describe("spx session commands", () => {
       );
 
       expect(exitCode).toBe(0);
-      expect(stdout).toContain("Claimed session: 2026-01-13_09-00-00");
+      expect(stdout).toContain("<PICKUP_ID>2026-01-13_09-00-00</PICKUP_ID>");
     });
 
     it("GIVEN no sessions WHEN pickup --auto THEN fails with error", async () => {
@@ -212,26 +212,26 @@ describe("spx session commands", () => {
     });
   });
 
-  describe("spx session create", () => {
-    it("GIVEN no options WHEN create THEN creates session with defaults", async () => {
+  describe("spx session handoff", () => {
+    it("GIVEN no options WHEN handoff THEN creates session with HANDOFF_ID tag", async () => {
       const { stdout, exitCode } = await execa(
         "node",
-        ["bin/spx.js", "session", "create", "--sessions-dir", sessionsDir],
+        ["bin/spx.js", "session", "handoff", "--sessions-dir", sessionsDir],
         { cwd: process.cwd(), input: "" },
       );
 
       expect(exitCode).toBe(0);
-      expect(stdout).toContain("Created session:");
+      expect(stdout).toMatch(/<HANDOFF_ID>\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}<\/HANDOFF_ID>/);
       expect(stdout).toContain("Path:");
     });
 
-    it("GIVEN priority and tags WHEN create THEN includes in session", async () => {
+    it("GIVEN priority and tags WHEN handoff THEN includes in session", async () => {
       const { stdout, exitCode } = await execa(
         "node",
         [
           "bin/spx.js",
           "session",
-          "create",
+          "handoff",
           "--priority",
           "high",
           "--tags",
@@ -243,22 +243,22 @@ describe("spx session commands", () => {
       );
 
       expect(exitCode).toBe(0);
-      expect(stdout).toContain("Created session:");
+      expect(stdout).toMatch(/<HANDOFF_ID>/);
     });
 
-    it("GIVEN content piped via stdin WHEN create THEN uses stdin content", async () => {
+    it("GIVEN content piped via stdin WHEN handoff THEN uses stdin content", async () => {
       const testContent = "# Session from stdin\n\nThis is piped content.";
       const { stdout, exitCode } = await execa(
         "node",
-        ["bin/spx.js", "session", "create", "--sessions-dir", sessionsDir],
+        ["bin/spx.js", "session", "handoff", "--sessions-dir", sessionsDir],
         { cwd: process.cwd(), input: testContent },
       );
 
       expect(exitCode).toBe(0);
-      expect(stdout).toContain("Created session:");
+      expect(stdout).toMatch(/<HANDOFF_ID>/);
 
-      // Extract session ID and verify content
-      const match = stdout.match(/Created session: (\S+)/);
+      // Extract session ID from HANDOFF_ID tag and verify content
+      const match = stdout.match(/<HANDOFF_ID>([^<]+)<\/HANDOFF_ID>/);
       expect(match).not.toBeNull();
       const sessionId = match![1];
 
@@ -304,29 +304,30 @@ describe("spx session commands", () => {
 
   describe("End-to-end workflow", () => {
     it(
-      "GIVEN session WHEN create -> pickup -> release -> delete THEN completes successfully",
+      "GIVEN session WHEN handoff -> pickup -> release -> delete THEN completes with parseable tags",
       { timeout: 15000 },
       async () => {
-        // Create
-        const createResult = await execa(
+        // Handoff - creates session with HANDOFF_ID tag
+        const handoffResult = await execa(
           "node",
-          ["bin/spx.js", "session", "create", "--sessions-dir", sessionsDir],
+          ["bin/spx.js", "session", "handoff", "--sessions-dir", sessionsDir],
           { cwd: process.cwd(), input: "" },
         );
-        expect(createResult.exitCode).toBe(0);
+        expect(handoffResult.exitCode).toBe(0);
 
-        // Extract session ID from output
-        const match = createResult.stdout.match(/Created session: (\S+)/);
-        expect(match).not.toBeNull();
-        const sessionId = match![1];
+        // Extract session ID from HANDOFF_ID tag
+        const handoffMatch = handoffResult.stdout.match(/<HANDOFF_ID>([^<]+)<\/HANDOFF_ID>/);
+        expect(handoffMatch).not.toBeNull();
+        const sessionId = handoffMatch![1];
 
-        // Pickup
+        // Pickup - returns session with PICKUP_ID tag
         const pickupResult = await execa(
           "node",
           ["bin/spx.js", "session", "pickup", sessionId, "--sessions-dir", sessionsDir],
           { cwd: process.cwd() },
         );
         expect(pickupResult.exitCode).toBe(0);
+        expect(pickupResult.stdout).toContain(`<PICKUP_ID>${sessionId}</PICKUP_ID>`);
 
         // Release
         const releaseResult = await execa(
