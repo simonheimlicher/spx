@@ -15,14 +15,14 @@ Sessions provide a priority-based queue for managing work handoffs between agent
 
 ## Command Reference
 
-| Command                    | Description                           |
-| -------------------------- | ------------------------------------- |
-| `spx session list`         | List all sessions grouped by status   |
-| `spx session show <id>`    | Display session content and metadata  |
-| `spx session pickup [id]`  | Claim a session (move to doing)       |
-| `spx session release [id]` | Release session back to todo          |
-| `spx session create`       | Create new session (reads from stdin) |
-| `spx session delete <id>`  | Permanently remove a session          |
+| Command                    | Description                               |
+| -------------------------- | ----------------------------------------- |
+| `spx session list`         | List all sessions grouped by status       |
+| `spx session show <id>`    | Display session content and metadata      |
+| `spx session pickup [id]`  | Claim a session (move to doing)           |
+| `spx session release [id]` | Release session back to todo              |
+| `spx session handoff`      | Create handoff session (reads from stdin) |
+| `spx session delete <id>`  | Permanently remove a session              |
 
 ### Common Options
 
@@ -30,18 +30,26 @@ All commands support:
 
 - `--sessions-dir <path>` - Use custom sessions directory instead of `.spx/sessions/`
 
+### Parseable Output Tags
+
+Commands output XML-style tags for easy parsing by automation tools:
+
+- **`<PICKUP_ID>session-id</PICKUP_ID>`** - Output by `spx session pickup`
+- **`<HANDOFF_ID>session-id</HANDOFF_ID>`** - Output by `spx session handoff`
+
 ## Creating Sessions
 
 ### From Stdin (Recommended)
 
-The create command reads content from stdin, making it easy to pipe content:
+The handoff command reads content from stdin, making it easy to pipe content:
 
 ```bash
 # Simple echo
-echo "# Fix login bug" | spx session create --priority high
+echo "# Fix login bug" | spx session handoff --priority high
+# Output: Created handoff session <HANDOFF_ID>2026-01-15_08-30-00</HANDOFF_ID>
 
 # Multi-line with heredoc
-cat << 'EOF' | spx session create --priority high --tags "feature,api"
+cat << 'EOF' | spx session handoff --priority high --tags "feature,api"
 # Implement User Authentication
 
 ## Context
@@ -64,23 +72,23 @@ EOF
 
 ```bash
 # Redirect file content
-spx session create --priority medium < task-description.md
+spx session handoff --priority medium < task-description.md
 
 # Or with cat
-cat task-description.md | spx session create --priority high
+cat task-description.md | spx session handoff --priority high
 ```
 
 ### With Priority and Tags
 
 ```bash
 # High priority with tags
-echo "# Urgent fix" | spx session create --priority high --tags "bug,urgent"
+echo "# Urgent fix" | spx session handoff --priority high --tags "bug,urgent"
 
 # Medium priority (default)
-echo "# Feature work" | spx session create
+echo "# Feature work" | spx session handoff
 
 # Low priority
-echo "# Nice to have" | spx session create --priority low --tags "enhancement"
+echo "# Nice to have" | spx session handoff --priority low --tags "enhancement"
 ```
 
 ### Quick Session (No Content)
@@ -88,7 +96,7 @@ echo "# Nice to have" | spx session create --priority low --tags "enhancement"
 If no stdin is provided, creates a session with default placeholder content:
 
 ```bash
-spx session create --priority medium
+spx session handoff --priority medium
 ```
 
 ## Listing Sessions

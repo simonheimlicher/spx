@@ -105,14 +105,16 @@ Use `spx session` to manage work handoffs between agent contexts.
 ### Core Workflow
 
 ```bash
-# Create a session (pipe content from stdin)
-echo "# Task: Implement feature X" | spx session create --priority high
+# Create a handoff session (pipe content from stdin)
+echo "# Task: Implement feature X" | spx session handoff --priority high
+# Output: Created handoff session <HANDOFF_ID>2026-01-15_08-30-00</HANDOFF_ID>
 
 # List all sessions
 spx session list
 
 # Claim highest priority session
 spx session pickup --auto
+# Output: Claimed session <PICKUP_ID>2026-01-15_08-30-00</PICKUP_ID>
 
 # Release session back to queue (if interrupted)
 spx session release
@@ -122,7 +124,7 @@ spx session release
 
 ```bash
 # From stdin (recommended for agents)
-cat << 'EOF' | spx session create --priority high --tags "feature,api"
+cat << 'EOF' | spx session handoff --priority high --tags "feature,api"
 # Implement User Authentication
 
 ## Context
@@ -135,7 +137,7 @@ cat << 'EOF' | spx session create --priority high --tags "feature,api"
 EOF
 
 # Quick session with default content
-spx session create --priority medium
+spx session handoff --priority medium
 ```
 
 ### Session Commands Reference
@@ -146,8 +148,15 @@ spx session create --priority medium
 | `spx session show <id>`    | Display session content                           |
 | `spx session pickup [id]`  | Claim session (use `--auto` for highest priority) |
 | `spx session release [id]` | Return session to todo queue                      |
-| `spx session create`       | Create session (reads content from stdin)         |
+| `spx session handoff`      | Create handoff session (reads content from stdin) |
 | `spx session delete <id>`  | Remove session                                    |
+
+### Parseable Output Tags
+
+Commands output XML-style tags for easy parsing by automation tools:
+
+- **`<PICKUP_ID>session-id</PICKUP_ID>`** - Output by `spx session pickup`
+- **`<HANDOFF_ID>session-id</HANDOFF_ID>`** - Output by `spx session handoff`
 
 **Detailed recipes**: [`docs/how-to/session/common-tasks.md`](docs/how-to/session/common-tasks.md)
 
