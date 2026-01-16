@@ -8,6 +8,7 @@
 GIVEN spx CLI with session domain
 WHEN running `spx session pickup <id>`
 THEN atomically claim session and show content
+AND output includes <PICKUP_ID>session-id</PICKUP_ID> tag for parsing
 ```
 
 #### Files created/modified
@@ -64,17 +65,18 @@ THEN display session content
 
 1. `src/commands/session/show.ts` [new]: Show command handler
 
-### FR6: Implement `spx session create` command
+### FR6: Implement `spx session handoff` command
 
 ```gherkin
 GIVEN spx CLI with session domain
-WHEN running `spx session create`
+WHEN running `spx session handoff`
 THEN create new session in todo directory
+AND output includes <HANDOFF_ID>session-id</HANDOFF_ID> tag for parsing
 ```
 
 #### Files created/modified
 
-1. `src/commands/session/create.ts` [new]: Create command handler
+1. `src/commands/session/handoff.ts` [new]: Handoff command handler
 
 ### FR7: Implement `spx session delete` command
 
@@ -195,11 +197,11 @@ describe("spx session commands", () => {
 
 - [ ] All Level 2 integration tests pass
 - [ ] `spx session` shows help with all subcommands
-- [ ] `spx session pickup <id>` claims and displays session
+- [ ] `spx session pickup <id>` claims and displays session with `<PICKUP_ID>` tag
 - [ ] `spx session pickup --auto` claims highest priority session
 - [ ] `spx session release [id]` returns session to todo
 - [ ] `spx session list` shows sessions by status
 - [ ] `spx session show <id>` displays session content
-- [ ] `spx session create` creates new session
+- [ ] `spx session handoff` creates new session with `<HANDOFF_ID>` tag
 - [ ] `spx session delete <id>` removes session
 - [ ] All commands support `--sessions-dir` option for custom directory
