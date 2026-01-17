@@ -25,6 +25,9 @@ export async function walkDirectory(
   visited: Set<string> = new Set()
 ): Promise<DirectoryEntry[]> {
   // Normalize and resolve path to handle symlinks
+  if (root.includes('..') || (root.startsWith('/'))) {
+    throw new Error(`Invalid directory path provided`);
+  }
   const normalizedRoot = path.resolve(root);
 
   // Check for symlink loops
