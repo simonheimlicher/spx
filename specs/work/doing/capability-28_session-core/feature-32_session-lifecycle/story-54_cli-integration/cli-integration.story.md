@@ -69,14 +69,34 @@ THEN display session content
 
 ```gherkin
 GIVEN spx CLI with session domain
-WHEN running `spx session handoff`
+WHEN running `spx session handoff` with stdin content
 THEN create new session in todo directory
+AND preserve YAML frontmatter from stdin (priority, tags)
+AND add default frontmatter if stdin lacks it
 AND output includes <HANDOFF_ID>session-id</HANDOFF_ID> tag for parsing
+```
+
+**Rationale**: Metadata (priority, tags) is provided via YAML frontmatter in stdin content
+rather than CLI arguments. This makes the command deterministic (`spx session handoff`)
+so Claude Code can pre-approve it once, instead of requiring approval for every
+unique `--tags` value.
+
+**Example stdin content**:
+
+```markdown
+---
+priority: high
+tags: [feature, api]
+---
+
+# Implement Authentication
+
+Add JWT-based auth.
 ```
 
 #### Files created/modified
 
-1. `src/commands/session/handoff.ts` [new]: Handoff command handler
+1. `src/commands/session/handoff.ts` [new]: Handoff command handler with frontmatter parsing
 
 ### FR7: Implement `spx session delete` command
 
