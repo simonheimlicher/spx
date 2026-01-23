@@ -22,7 +22,7 @@ describe("spx spec next command", () => {
     const cwd = path.join(__dirname, "../../fixtures/repos/mixed");
 
     // When
-    const { stdout, exitCode } = await execa("node", [CLI_PATH, "next"], {
+    const { stdout, exitCode } = await execa("node", [CLI_PATH, "spec", "next"], {
       cwd,
     });
 
@@ -38,7 +38,7 @@ describe("spx spec next command", () => {
     const cwd = path.join(__dirname, "../../fixtures/repos/all-done");
 
     // When
-    const { stdout, exitCode } = await execa("node", [CLI_PATH, "next"], {
+    const { stdout, exitCode } = await execa("node", [CLI_PATH, "spec", "next"], {
       cwd,
     });
 
@@ -53,7 +53,7 @@ describe("spx spec next command", () => {
     const cwd = path.join(__dirname, "../../fixtures/repos/empty");
 
     // When
-    const { stdout, exitCode } = await execa("node", [CLI_PATH, "next"], {
+    const { stdout, exitCode } = await execa("node", [CLI_PATH, "spec", "next"], {
       cwd,
     });
 
@@ -70,7 +70,7 @@ describe("spx spec next command", () => {
     const cwd = path.join(__dirname, "../../fixtures/repos/simple");
 
     // When
-    const { stdout, exitCode } = await execa("node", [CLI_PATH, "next"], {
+    const { stdout, exitCode } = await execa("node", [CLI_PATH, "spec", "next"], {
       cwd,
     });
 
@@ -84,7 +84,7 @@ describe("spx spec next command", () => {
     const cwd = path.join(__dirname, "../../fixtures");
 
     // When
-    const result = await execa("node", [CLI_PATH, "next"], {
+    const result = await execa("node", [CLI_PATH, "spec", "next"], {
       cwd,
       reject: false,
     });

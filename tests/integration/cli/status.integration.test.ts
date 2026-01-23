@@ -2,17 +2,17 @@
  * Level 2: Integration tests for CLI status command
  * Stories: story-21_status-command, story-43_format-options
  */
-import { describe, it, expect } from "vitest";
 import { execa } from "execa";
 import path from "path";
 import { fileURLToPath } from "url";
+import { describe, expect, it } from "vitest";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const CLI_PATH = path.join(__dirname, "../../../bin/spx.js");
 
-describe("spx status command", () => {
+describe("spx spec status command", () => {
   /**
    * Level 2: Integration tests with real CLI and Commander.js
    */
@@ -22,7 +22,7 @@ describe("spx status command", () => {
     const cwd = path.join(__dirname, "../../fixtures/repos/simple");
 
     // When
-    const { stdout, exitCode } = await execa("node", [CLI_PATH, "status"], {
+    const { stdout, exitCode } = await execa("node", [CLI_PATH, "spec", "status"], {
       cwd,
     });
 
@@ -38,7 +38,7 @@ describe("spx status command", () => {
     const cwd = path.join(__dirname, "../../fixtures/repos/empty");
 
     // When
-    const { stdout, exitCode } = await execa("node", [CLI_PATH, "status"], {
+    const { stdout, exitCode } = await execa("node", [CLI_PATH, "spec", "status"], {
       cwd,
     });
 
@@ -52,7 +52,7 @@ describe("spx status command", () => {
     const cwd = path.join(__dirname, "../../fixtures");
 
     // When
-    const result = await execa("node", [CLI_PATH, "status"], {
+    const result = await execa("node", [CLI_PATH, "spec", "status"], {
       cwd,
       reject: false,
     });
@@ -63,7 +63,7 @@ describe("spx status command", () => {
   });
 });
 
-describe("spx status --json", () => {
+describe("spx spec status --json", () => {
   /**
    * Level 2: Integration tests for --json flag
    * Story: story-43_format-options
@@ -76,8 +76,8 @@ describe("spx status --json", () => {
     // When
     const { stdout, exitCode } = await execa(
       "node",
-      [CLI_PATH, "status", "--json"],
-      { cwd }
+      [CLI_PATH, "spec", "status", "--json"],
+      { cwd },
     );
 
     // Then
@@ -88,7 +88,7 @@ describe("spx status --json", () => {
   });
 });
 
-describe("spx status --format", () => {
+describe("spx spec status --format", () => {
   /**
    * Level 2: Integration tests for --format option
    * Story: story-43_format-options
@@ -101,8 +101,8 @@ describe("spx status --format", () => {
     // When
     const { stdout, exitCode } = await execa(
       "node",
-      [CLI_PATH, "status", "--format", "json"],
-      { cwd }
+      [CLI_PATH, "spec", "status", "--format", "json"],
+      { cwd },
     );
 
     // Then
@@ -117,8 +117,8 @@ describe("spx status --format", () => {
     // When
     const { stdout, exitCode } = await execa(
       "node",
-      [CLI_PATH, "status", "--format", "markdown"],
-      { cwd }
+      [CLI_PATH, "spec", "status", "--format", "markdown"],
+      { cwd },
     );
 
     // Then
@@ -133,8 +133,8 @@ describe("spx status --format", () => {
     // When
     const { stdout, exitCode } = await execa(
       "node",
-      [CLI_PATH, "status", "--format", "table"],
-      { cwd }
+      [CLI_PATH, "spec", "status", "--format", "table"],
+      { cwd },
     );
 
     // Then
@@ -149,8 +149,8 @@ describe("spx status --format", () => {
     // When
     const { stdout, exitCode } = await execa(
       "node",
-      [CLI_PATH, "status", "--format", "text"],
-      { cwd }
+      [CLI_PATH, "spec", "status", "--format", "text"],
+      { cwd },
     );
 
     // Then
@@ -166,12 +166,12 @@ describe("spx status --format", () => {
     // When
     const result = await execa(
       "node",
-      [CLI_PATH, "status", "--format", "invalid"],
-      { cwd, reject: false }
+      [CLI_PATH, "spec", "status", "--format", "invalid"],
+      { cwd, reject: false },
     );
 
     // Then
     expect(result.exitCode).toBe(1);
-    expect(result.stderr).toContain('Invalid format "invalid"');
+    expect(result.stderr).toContain("Invalid format \"invalid\"");
   });
 });

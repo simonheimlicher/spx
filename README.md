@@ -39,23 +39,23 @@ npm install -g spx
 
 ```bash
 # Get project status
-spx status
+spx spec status
 
 # Get status as JSON (for scripts/agents)
-spx status --json
+spx spec status --json
 
 # Choose output format
-spx status --format markdown
-spx status --format table
+spx spec status --format markdown
+spx spec status --format table
 
 # Find next work item to work on
-spx next
+spx spec next
 ```
 
 ### Example Output
 
 ```
-$ spx status
+$ spx spec status
 
 capability-21_core-cli [IN PROGRESS]
 ├── feature-21_pattern-matching [DONE]
@@ -153,7 +153,7 @@ npm run validate
 npm run build
 
 # Run locally
-node bin/spx.js status
+node bin/spx.js spec status
 ```
 
 ## Technical Stack
