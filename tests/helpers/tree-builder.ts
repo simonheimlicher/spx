@@ -5,7 +5,8 @@
  * Feature 54 (tree building) to be complete.
  */
 import type { TreeNode, WorkItemTree } from "@/tree/types";
-import type { WorkItemStatus, WorkItemKind } from "@/types";
+import type { WorkItemKind, WorkItemStatus } from "@/types";
+import { WORK_ITEM_KINDS } from "../fixtures/constants";
 
 /**
  * Create a synthetic tree node
@@ -22,7 +23,7 @@ export function createNode(
   number: number,
   slug: string,
   status: WorkItemStatus,
-  children: TreeNode[] = []
+  children: TreeNode[] = [],
 ): TreeNode {
   return {
     kind,
@@ -150,4 +151,51 @@ export function buildTreeWithMixedStatus(): WorkItemTree {
   ]);
 
   return { nodes: [cap] };
+}
+
+/**
+ * Build a path of arbitrary depth based on WORK_ITEM_KINDS
+ *
+ * Adapts to any hierarchy depth (3 levels, 5 levels, etc.)
+ * Returns both the root node and the leaf node for assertions.
+ *
+ * @param bspNumbers - Array of BSP numbers, one per hierarchy level
+ * @param status - Status for the leaf node (default: "OPEN")
+ * @returns Object with root and leaf nodes
+ * @throws Error if bspNumbers length doesn't match WORK_ITEM_KINDS length
+ *
+ * @example
+ * ```typescript
+ * // Build path: capability-10 > feature-20 > story-30
+ * const { root, leaf } = buildTreePath([10, 20, 30]);
+ * expect(leaf.kind).toBe("story");
+ * ```
+ */
+export function buildTreePath(
+  bspNumbers: number[],
+  status: WorkItemStatus = "OPEN",
+): { root: TreeNode; leaf: TreeNode } {
+  if (bspNumbers.length !== WORK_ITEM_KINDS.length) {
+    throw new Error(
+      `Expected ${WORK_ITEM_KINDS.length} BSP numbers, got ${bspNumbers.length}`,
+    );
+  }
+
+  // Build from leaf to root
+  let node: TreeNode | null = null;
+  for (let i = WORK_ITEM_KINDS.length - 1; i >= 0; i--) {
+    const kind = WORK_ITEM_KINDS[i];
+    const num = bspNumbers[i];
+    // Only leaf gets the specified status, parents are IN_PROGRESS
+    const nodeStatus = i === WORK_ITEM_KINDS.length - 1 ? status : "IN_PROGRESS";
+    node = createNode(kind, num, `${kind[0]}${num}`, nodeStatus, node ? [node] : []);
+  }
+
+  // Find leaf by traversing to deepest node
+  let leaf = node!;
+  while (leaf.children.length > 0) {
+    leaf = leaf.children[0];
+  }
+
+  return { root: node!, leaf };
 }

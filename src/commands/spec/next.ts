@@ -25,12 +25,13 @@ export interface NextOptions {
  * Priority order:
  * - BSP order is absolute - lower number must complete first
  * - Status (IN_PROGRESS vs OPEN) is irrelevant to priority
- * - Returns first non-DONE story in BSP order
+ * - Returns first non-DONE leaf in BSP order
  *
- * Only considers story-level work items (leaf nodes).
+ * Tree is already BSP-sorted at each level (per ADR-002).
+ * Traverses depth-first in BSP order to find first non-DONE leaf.
  *
  * @param tree - Work item tree
- * @returns Next story to work on, or null if all done
+ * @returns Next leaf node to work on, or null if all done
  *
  * @example
  * ```typescript
@@ -40,39 +41,36 @@ export interface NextOptions {
  * ```
  */
 export function findNextWorkItem(tree: WorkItemTree): TreeNode | null {
-  // Collect all stories (leaf nodes) from the tree
-  const stories: TreeNode[] = [];
-  collectStories(tree.nodes, stories);
-
-  if (stories.length === 0) {
-    return null;
-  }
-
-  // Filter to non-DONE stories, sorted by BSP number
-  // BSP order is absolute - lower number must complete first, regardless of status
-  const pending = stories
-    .filter((story) => story.status !== "DONE")
-    .sort((a, b) => a.number - b.number);
-
-  // Return first non-DONE item (lowest BSP wins regardless of status)
-  return pending[0] ?? null;
+  // Tree is already BSP-sorted at each level (per ADR-002)
+  // Traverse depth-first in BSP order to find first non-DONE leaf
+  return findFirstNonDoneLeaf(tree.nodes);
 }
 
 /**
- * Recursively collect all story nodes from tree
+ * Recursively find first non-DONE story node in BSP order
  *
- * @param nodes - Tree nodes to traverse
- * @param stories - Accumulator for story nodes
+ * Tree children are assumed to be pre-sorted by BSP number (per ADR-002).
+ * Only story nodes are considered actionable work items.
+ *
+ * @param nodes - Tree nodes to traverse (assumed BSP-sorted)
+ * @returns First non-DONE story node, or null if all done
  */
-function collectStories(nodes: TreeNode[], stories: TreeNode[]): void {
+function findFirstNonDoneLeaf(nodes: TreeNode[]): TreeNode | null {
   for (const node of nodes) {
     if (node.kind === "story") {
-      stories.push(node);
+      // Story is an actionable work item - check status
+      if (node.status !== "DONE") {
+        return node;
+      }
     } else {
-      // Recursively collect from children
-      collectStories(node.children, stories);
+      // Non-story (capability/feature) - recurse into children (already BSP-sorted)
+      const found = findFirstNonDoneLeaf(node.children);
+      if (found) {
+        return found;
+      }
     }
   }
+  return null;
 }
 
 /**
