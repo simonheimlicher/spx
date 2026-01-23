@@ -1,16 +1,9 @@
 /**
  * Test constants and default values for test data generation
  */
-import type { WorkItemKind } from "@/types";
 
-/**
- * All valid work item kinds
- */
-export const WORK_ITEM_KINDS: readonly WorkItemKind[] = [
-  "capability",
-  "feature",
-  "story",
-] as const;
+// Re-export from production code (per ADR-21: single source of truth)
+export { LEAF_KIND, WORK_ITEM_KINDS } from "@/types";
 
 /**
  * Default BSP number for test data

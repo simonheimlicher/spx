@@ -8,6 +8,25 @@
 export type WorkItemKind = "capability" | "feature" | "story";
 
 /**
+ * Ordered hierarchy of work item kinds (root to leaf)
+ *
+ * Used by both production code and tests to derive hierarchy structure.
+ * Per ADR-21: Never hardcode kind names - derive from this constant.
+ */
+export const WORK_ITEM_KINDS: readonly WorkItemKind[] = [
+  "capability",
+  "feature",
+  "story",
+] as const;
+
+/**
+ * The leaf kind (actionable work items)
+ *
+ * Derived from WORK_ITEM_KINDS to ensure consistency if hierarchy changes.
+ */
+export const LEAF_KIND: WorkItemKind = WORK_ITEM_KINDS.at(-1)!;
+
+/**
  * Parsed work item structure
  */
 export interface WorkItem {

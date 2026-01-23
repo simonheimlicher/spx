@@ -10,6 +10,7 @@ import { DEFAULT_CONFIG } from "../../config/defaults.js";
 import { Scanner } from "../../scanner/scanner.js";
 import { buildTree } from "../../tree/build.js";
 import type { TreeNode, WorkItemTree } from "../../tree/types.js";
+import { LEAF_KIND } from "../../types.js";
 
 /**
  * Options for next command
@@ -57,13 +58,13 @@ export function findNextWorkItem(tree: WorkItemTree): TreeNode | null {
  */
 function findFirstNonDoneLeaf(nodes: TreeNode[]): TreeNode | null {
   for (const node of nodes) {
-    if (node.kind === "story") {
-      // Story is an actionable work item - check status
+    if (node.kind === LEAF_KIND) {
+      // Leaf kind is an actionable work item - check status
       if (node.status !== "DONE") {
         return node;
       }
     } else {
-      // Non-story (capability/feature) - recurse into children (already BSP-sorted)
+      // Non-leaf - recurse into children (already BSP-sorted)
       const found = findFirstNonDoneLeaf(node.children);
       if (found) {
         return found;
