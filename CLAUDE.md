@@ -34,19 +34,19 @@ Standards documentation lives in `docs/` for human reference. Agent-specific ins
 
 ```bash
 # Full validation pipeline (circular deps → ESLint → TypeScript)
-npm run validate
+pnpm run validate
 
 # Quick verification before committing
-npm run validate && npm test
+pnpm run validate && pnpm test
 ```
 
 ### Pre-Commit Checklist
 
 Before committing ANY changes:
 
-- [ ] **`npm run validate`** passes (all 3 steps: circular deps, ESLint, TypeScript)
-- [ ] **`npm test`** shows 0 failed tests
-- [ ] **`npm run build`** succeeds
+- [ ] **`pnpm run validate`** passes (all 3 steps: circular deps, ESLint, TypeScript)
+- [ ] **`pnpm test`** shows 0 failed tests
+- [ ] **`pnpm run build`** succeeds
 
 ### Committing Changes
 
@@ -62,17 +62,17 @@ git add . && git commit -m "..."
 
 ### Available Validation Commands
 
-| Command                       | Purpose                                   |
-| ----------------------------- | ----------------------------------------- |
-| `npm run validate`            | Full validation (circular → ESLint → tsc) |
-| `npm run validate:production` | Production scope only                     |
-| `npm run lint`                | ESLint only                               |
-| `npm run lint:fix`            | Auto-fix ESLint issues                    |
-| `npm run typecheck`           | TypeScript only                           |
-| `npm run circular`            | Check for circular dependencies           |
-| `npm run knip`                | Find unused code                          |
-| `npm run format`              | Format code with Prettier                 |
-| `npm run format:check`        | Check formatting without changing files   |
+| Command                        | Purpose                                   |
+| ------------------------------ | ----------------------------------------- |
+| `pnpm run validate`            | Full validation (circular → ESLint → tsc) |
+| `pnpm run validate:production` | Production scope only                     |
+| `pnpm run lint`                | ESLint only                               |
+| `pnpm run lint:fix`            | Auto-fix ESLint issues                    |
+| `pnpm run typecheck`           | TypeScript only                           |
+| `pnpm run circular`            | Check for circular dependencies           |
+| `pnpm run knip`                | Find unused code                          |
+| `pnpm run format`              | Format code with Prettier                 |
+| `pnpm run format:check`        | Check formatting without changing files   |
 
 ---
 
@@ -196,13 +196,13 @@ Commands output XML-style tags for easy parsing by automation tools:
 
 ```bash
 # Install dependencies
-npm ci
+pnpm install
 
 # Run tests
-npm test
+pnpm test
 
 # Build
-npm run build
+pnpm run build
 
 # Run CLI locally
 node bin/spx.js --help

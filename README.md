@@ -2,7 +2,7 @@
 
 Fast, deterministic CLI tool for spec workflow management.
 
-> **Note**: This tool will be published to the NPM registry when it reaches a more mature state. For now, install directly from GitHub.
+> **Note**: This tool will be published to a registry when it reaches a more mature state. For now, install directly from GitHub.
 
 ## What is spx?
 
@@ -23,16 +23,16 @@ Fast, deterministic CLI tool for spec workflow management.
 # Clone and install
 git clone https://github.com/simonheimlicher/spx-cli.git
 cd spx-cli
-npm install
-npm run build
-npm link  # Makes 'spx' available globally
+pnpm install
+pnpm run build
+pnpm link --global  # Makes 'spx' available globally
 ```
 
-### From npm (Coming Soon)
+### From Registry (Coming Soon)
 
 ```bash
 # Will be available when published
-npm install -g spx
+pnpm add -g spx
 ```
 
 ## Usage
@@ -141,16 +141,16 @@ Numbers use [BSP (Binary Space Partitioning)](https://en.wikipedia.org/wiki/Bina
 
 ```bash
 # Install dependencies
-npm ci
+pnpm install
 
 # Run tests
-npm test
+pnpm test
 
 # Run validation (required before commits)
-npm run validate
+pnpm run validate
 
 # Build
-npm run build
+pnpm run build
 
 # Run locally
 node bin/spx.js spec status

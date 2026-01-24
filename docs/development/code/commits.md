@@ -6,10 +6,10 @@
 
 ### Automated Checks (All Must Pass)
 
-- [ ] **`npm test`** shows **0** failed tests
-- [ ] **`npm run typecheck`** shows **0** type errors
-- [ ] **`npm run lint`** shows **0** errors (warnings acceptable)
-- [ ] **`npm run build`** succeeds (build smoke test)
+- [ ] **`pnpm test`** shows **0** failed tests
+- [ ] **`pnpm run typecheck`** shows **0** type errors
+- [ ] **`pnpm run lint`** shows **0** errors (warnings acceptable)
+- [ ] **`pnpm run build`** succeeds (build smoke test)
 
 ### Manual Verification Requirements
 

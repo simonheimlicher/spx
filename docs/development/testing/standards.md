@@ -64,18 +64,18 @@ spx uses **Vitest** for testing.
 
 ```bash
 # Run all tests
-npm test
+pnpm test
 
 # Run tests in watch mode
-npm run test:watch
+pnpm run test:watch
 
 # Run with coverage
-npm run test:coverage
+pnpm run test:coverage
 
 # Run specific level
-npm test -- tests/unit/           # Level 1 only
-npm test -- tests/integration/    # Level 2 only
-npm test -- tests/e2e/            # Level 3 only
+pnpm test -- tests/unit/           # Level 1 only
+pnpm test -- tests/integration/    # Level 2 only
+pnpm test -- tests/e2e/            # Level 3 only
 ```
 
 ---
@@ -349,8 +349,7 @@ it("readdirSync returns directory entries", async () => {
 // ✅ GOOD - testing OUR code that uses fs
 it("GIVEN directory with work items WHEN scanning THEN filters by pattern", async () => {
   const mockDeps = {
-    readdirSync:
-      () => ["capability-21_foo", "not-a-work-item", "feature-10_bar"],
+    readdirSync: () => ["capability-21_foo", "not-a-work-item", "feature-10_bar"],
   };
 
   const result = await scanWorkItems(root, mockDeps);
