@@ -4,11 +4,15 @@
 import type { Command } from "commander";
 
 import {
+  archiveCommand,
   deleteCommand,
   handoffCommand,
   listCommand,
   pickupCommand,
+  pruneCommand,
+  PruneValidationError,
   releaseCommand,
+  SessionAlreadyArchivedError,
   showCommand,
 } from "../../commands/session/index.js";
 import type { Domain } from "../types.js";
@@ -168,6 +172,52 @@ function registerSessionCommands(sessionCmd: Command): void {
         });
         console.log(output);
       } catch (error) {
+        handleError(error);
+      }
+    });
+
+  // prune command
+  sessionCmd
+    .command("prune")
+    .description("Remove old todo sessions, keeping the most recent N")
+    .option("--keep <count>", "Number of sessions to keep (default: 5)", "5")
+    .option("--dry-run", "Show what would be deleted without deleting")
+    .option("--sessions-dir <path>", "Custom sessions directory")
+    .action(async (options: { keep?: string; dryRun?: boolean; sessionsDir?: string }) => {
+      try {
+        const keep = options.keep ? Number.parseInt(options.keep, 10) : undefined;
+        const output = await pruneCommand({
+          keep,
+          dryRun: options.dryRun,
+          sessionsDir: options.sessionsDir,
+        });
+        console.log(output);
+      } catch (error) {
+        if (error instanceof PruneValidationError) {
+          console.error("Error:", error.message);
+          process.exit(1);
+        }
+        handleError(error);
+      }
+    });
+
+  // archive command
+  sessionCmd
+    .command("archive <id>")
+    .description("Move a session to the archive directory")
+    .option("--sessions-dir <path>", "Custom sessions directory")
+    .action(async (id: string, options: { sessionsDir?: string }) => {
+      try {
+        const output = await archiveCommand({
+          sessionId: id,
+          sessionsDir: options.sessionsDir,
+        });
+        console.log(output);
+      } catch (error) {
+        if (error instanceof SessionAlreadyArchivedError) {
+          console.error("Error:", error.message);
+          process.exit(1);
+        }
         handleError(error);
       }
     });
