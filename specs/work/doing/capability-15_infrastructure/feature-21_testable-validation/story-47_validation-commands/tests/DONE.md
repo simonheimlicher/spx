@@ -38,16 +38,6 @@ Per feature-21 spec, CLI command functions are **thin orchestration layers** tha
 pnpm vitest run tests/integration/cli/validation.integration.test.ts
 ```
 
-## Files Modified
+## Commit
 
-- `src/commands/validation/typescript.ts` - Wired to `validateTypeScript()`
-- `src/commands/validation/lint.ts` - Wired to `validateESLint()`
-- `src/commands/validation/circular.ts` - Wired to `validateCircularDependencies()`
-- `src/commands/validation/knip.ts` - Wired to `validateKnip()`
-- `bin/spx.js` - Added tsx fallback for development
-- `tests/integration/cli/validation.integration.test.ts` - New integration tests
-
-## Notes
-
-- Placeholder test in `tests/unit/typescript-command.test.ts` superseded by integration tests
-- Integration tests use current project as clean fixture (validation passes on HEAD)
+`0ba5a0f` - feat(validation): wire CLI commands to validation step functions
