@@ -8,6 +8,8 @@ export interface ValidationCommandResult {
   exitCode: number;
   /** Output to display */
   output: string;
+  /** Duration in milliseconds (optional for backward compatibility) */
+  durationMs?: number;
 }
 
 /** Common options for all validation commands */

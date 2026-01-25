@@ -16,12 +16,13 @@ import type { CircularCommandOptions, ValidationCommandResult } from "./types";
  */
 export async function circularCommand(options: CircularCommandOptions): Promise<ValidationCommandResult> {
   const { cwd, quiet } = options;
+  const startTime = Date.now();
 
   // Discover madge
   const toolResult = await discoverTool("madge", { projectRoot: cwd });
   if (!toolResult.found) {
     const skipMessage = formatSkipMessage("circular dependency check", toolResult);
-    return { exitCode: 0, output: skipMessage };
+    return { exitCode: 0, output: skipMessage, durationMs: Date.now() - startTime };
   }
 
   // Get scope configuration from tsconfig (circular always uses full scope)
@@ -29,11 +30,12 @@ export async function circularCommand(options: CircularCommandOptions): Promise<
 
   // Run circular dependency validation
   const result = await validateCircularDependencies("full", scopeConfig);
+  const durationMs = Date.now() - startTime;
 
   // Map result to command output
   if (result.success) {
     const output = quiet ? "" : `Circular dependencies: ✓ None found`;
-    return { exitCode: 0, output };
+    return { exitCode: 0, output, durationMs };
   } else {
     // Format circular dependency output
     let output = result.error ?? "Circular dependencies found";
@@ -43,6 +45,6 @@ export async function circularCommand(options: CircularCommandOptions): Promise<
         .join("\n");
       output = `Circular dependencies found:\n${cycles}`;
     }
-    return { exitCode: 1, output };
+    return { exitCode: 1, output, durationMs };
   }
 }

@@ -8,10 +8,33 @@
  * 4. TypeScript (slowest)
  */
 import { circularCommand } from "./circular";
+import { formatDuration, formatSummary } from "./format";
 import { knipCommand } from "./knip";
 import { lintCommand } from "./lint";
 import type { AllCommandOptions, ValidationCommandResult } from "./types";
 import { typescriptCommand } from "./typescript";
+
+/** Total number of validation steps */
+const TOTAL_STEPS = 4;
+
+/**
+ * Format step output with step number and timing.
+ *
+ * @param stepNumber - Current step number (1-indexed)
+ * @param result - Validation result
+ * @param quiet - Whether to suppress output
+ * @returns Formatted output string
+ */
+function formatStepWithTiming(
+  stepNumber: number,
+  result: ValidationCommandResult,
+  quiet: boolean,
+): string {
+  if (quiet || !result.output) return "";
+
+  const timing = result.durationMs === undefined ? "" : ` (${formatDuration(result.durationMs)})`;
+  return `[${stepNumber}/${TOTAL_STEPS}] ${result.output}${timing}`;
+}
 
 /**
  * Run all validation steps.
@@ -20,32 +43,47 @@ import { typescriptCommand } from "./typescript";
  * @returns Command result with exit code and output
  */
 export async function allCommand(options: AllCommandOptions): Promise<ValidationCommandResult> {
-  const { cwd, scope, files, fix, quiet, json } = options;
+  const { cwd, scope, files, fix, quiet = false, json } = options;
+  const startTime = Date.now();
   const outputs: string[] = [];
   let hasFailure = false;
 
   // 1. Circular dependencies
   const circularResult = await circularCommand({ cwd, quiet, json });
-  if (circularResult.output) outputs.push(circularResult.output);
+  const circularOutput = formatStepWithTiming(1, circularResult, quiet);
+  if (circularOutput) outputs.push(circularOutput);
   if (circularResult.exitCode !== 0) hasFailure = true;
 
   // 2. Knip (optional - skip on failure, it's informational)
   const knipResult = await knipCommand({ cwd, quiet, json });
-  if (knipResult.output) outputs.push(knipResult.output);
+  const knipOutput = formatStepWithTiming(2, knipResult, quiet);
+  if (knipOutput) outputs.push(knipOutput);
   // Don't fail on knip - it's optional
 
   // 3. ESLint
   const lintResult = await lintCommand({ cwd, scope, files, fix, quiet, json });
-  if (lintResult.output) outputs.push(lintResult.output);
+  const lintOutput = formatStepWithTiming(3, lintResult, quiet);
+  if (lintOutput) outputs.push(lintOutput);
   if (lintResult.exitCode !== 0) hasFailure = true;
 
   // 4. TypeScript
   const tsResult = await typescriptCommand({ cwd, scope, files, quiet, json });
-  if (tsResult.output) outputs.push(tsResult.output);
+  const tsOutput = formatStepWithTiming(4, tsResult, quiet);
+  if (tsOutput) outputs.push(tsOutput);
   if (tsResult.exitCode !== 0) hasFailure = true;
+
+  // Calculate total duration
+  const totalDurationMs = Date.now() - startTime;
+
+  // Add summary line
+  if (!quiet) {
+    const summary = formatSummary({ success: !hasFailure, totalDurationMs });
+    outputs.push("", summary); // Empty line before summary
+  }
 
   return {
     exitCode: hasFailure ? 1 : 0,
-    output: outputs.join("\n\n"),
+    output: outputs.join("\n"),
+    durationMs: totalDurationMs,
   };
 }

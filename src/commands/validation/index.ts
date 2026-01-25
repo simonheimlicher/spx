@@ -21,3 +21,7 @@ export { circularCommand } from "./circular";
 export { knipCommand } from "./knip";
 export { lintCommand } from "./lint";
 export { typescriptCommand } from "./typescript";
+
+// Formatting utilities
+export { DURATION_THRESHOLD_MS, formatDuration, formatStepOutput, formatSummary, VALIDATION_SYMBOLS } from "./format";
+export type { FormatStepOptions, FormatSummaryOptions } from "./format";

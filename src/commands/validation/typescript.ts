@@ -16,12 +16,13 @@ import type { TypeScriptCommandOptions, ValidationCommandResult } from "./types"
  */
 export async function typescriptCommand(options: TypeScriptCommandOptions): Promise<ValidationCommandResult> {
   const { cwd, scope = "full", files, quiet } = options;
+  const startTime = Date.now();
 
   // Discover tsc (provided by typescript package)
   const toolResult = await discoverTool("typescript", { projectRoot: cwd });
   if (!toolResult.found) {
     const skipMessage = formatSkipMessage("TypeScript", toolResult);
-    return { exitCode: 0, output: skipMessage };
+    return { exitCode: 0, output: skipMessage, durationMs: Date.now() - startTime };
   }
 
   // Get scope configuration from tsconfig
@@ -29,13 +30,14 @@ export async function typescriptCommand(options: TypeScriptCommandOptions): Prom
 
   // Run TypeScript validation
   const result = await validateTypeScript(scope, scopeConfig, files);
+  const durationMs = Date.now() - startTime;
 
   // Map result to command output
   if (result.success) {
     const output = quiet ? "" : `TypeScript: ✓ No type errors`;
-    return { exitCode: 0, output };
+    return { exitCode: 0, output, durationMs };
   } else {
     const output = result.error ?? "TypeScript validation failed";
-    return { exitCode: 1, output };
+    return { exitCode: 1, output, durationMs };
   }
 }

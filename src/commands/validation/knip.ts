@@ -16,12 +16,13 @@ import type { KnipCommandOptions, ValidationCommandResult } from "./types";
  */
 export async function knipCommand(options: KnipCommandOptions): Promise<ValidationCommandResult> {
   const { cwd, quiet } = options;
+  const startTime = Date.now();
 
   // Discover knip
   const toolResult = await discoverTool("knip", { projectRoot: cwd });
   if (!toolResult.found) {
     const skipMessage = formatSkipMessage("unused code detection", toolResult);
-    return { exitCode: 0, output: skipMessage };
+    return { exitCode: 0, output: skipMessage, durationMs: Date.now() - startTime };
   }
 
   // Get scope configuration from tsconfig (knip uses full scope)
@@ -29,13 +30,14 @@ export async function knipCommand(options: KnipCommandOptions): Promise<Validati
 
   // Run knip validation
   const result = await validateKnip(scopeConfig);
+  const durationMs = Date.now() - startTime;
 
   // Map result to command output
   if (result.success) {
     const output = quiet ? "" : `Knip: ✓ No unused code found`;
-    return { exitCode: 0, output };
+    return { exitCode: 0, output, durationMs };
   } else {
     const output = result.error ?? "Unused code found";
-    return { exitCode: 1, output };
+    return { exitCode: 1, output, durationMs };
   }
 }

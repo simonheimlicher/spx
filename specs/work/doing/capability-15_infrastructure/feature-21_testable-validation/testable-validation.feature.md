@@ -9,6 +9,7 @@ Validation is a first-class CLI domain (`spx validation`) that works as a global
 - **Graceful degradation**: Missing tools are skipped with informative messages
 - **Project config detection**: Uses local `tsconfig.json`, `eslint.config.ts` when present
 - **Backward compatibility**: `npm run validate` continues to work via thin wrapper
+- **Progress visibility**: Step numbering, timing per step, and summary with total duration
 
 ### Technical Quality
 
@@ -32,6 +33,9 @@ Validation is a first-class CLI domain (`spx validation`) that works as a global
 | `buildTypeScriptArgs()`    | 1      | Pure function selecting tsconfig based on scope   |
 | `parseStdinJson()`         | 1      | Pure async parser for hook input                  |
 | `validateAndExpandFiles()` | 1      | Pure function expanding paths to TypeScript files |
+| `formatDuration()`         | 1      | Pure function formatting milliseconds to string   |
+| `formatStepOutput()`       | 1      | Pure function formatting step result with timing  |
+| `formatSummary()`          | 1      | Pure function formatting validation summary       |
 | Tool discovery integration | 2      | Integration finding real tools in PATH            |
 | ESLint validation step     | 2      | Integration with real ESLint binary on fixtures   |
 | TypeScript validation      | 2      | Integration with real tsc binary on fixtures      |
@@ -139,23 +143,19 @@ This feature enables the entire validation infrastructure capability:
 
 ## Stories
 
-### Completed (from original scope)
+### Completed
 
 - **Story-21**: Configure TypeScript checking for scripts - DONE
 - **Story-22**: Create test harness for validation tests - DONE
 - **Story-32**: Extract pure functions with dependency injection - DONE
+- **Story-43**: Validation test suite - target `src/validation/` - DONE
+- **Story-44**: Tool discovery infrastructure - DONE
+- **Story-45**: Extract validation core to `src/validation/` - DONE
+- **Story-46**: Validation domain registration - DONE
+- **Story-47**: Individual validation commands - DONE
 
-### New Stories (CLI domain)
+### New Stories (Output Enhancements)
 
-- **Story-44**: Tool discovery infrastructure
-- **Story-45**: Extract validation core to `src/validation/`
-- **Story-46**: Validation domain registration
-- **Story-47**: Individual validation commands
-- **Story-48**: Project config detection
-- **Story-49**: Dependency migration (optional dependencies)
-
-### Revised
-
-- **Story-43**: Validation test suite - target `src/validation/` instead of `scripts/run/`
+- **Story-48**: Validation output enhancements - Add timing, step numbers, and summary to CLI output
 
 **Note**: To see current stories in this feature, use `ls` or `find` to list story directories (e.g., `story-*`) within the feature's directory.

@@ -17,12 +17,13 @@ import type { LintCommandOptions, ValidationCommandResult } from "./types";
  */
 export async function lintCommand(options: LintCommandOptions): Promise<ValidationCommandResult> {
   const { cwd, scope = "full", files, fix, quiet } = options;
+  const startTime = Date.now();
 
   // Discover eslint
   const toolResult = await discoverTool("eslint", { projectRoot: cwd });
   if (!toolResult.found) {
     const skipMessage = formatSkipMessage("ESLint", toolResult);
-    return { exitCode: 0, output: skipMessage };
+    return { exitCode: 0, output: skipMessage, durationMs: Date.now() - startTime };
   }
 
   // Get scope configuration from tsconfig
@@ -41,13 +42,14 @@ export async function lintCommand(options: LintCommandOptions): Promise<Validati
 
   // Run ESLint validation
   const result = await validateESLint(context);
+  const durationMs = Date.now() - startTime;
 
   // Map result to command output
   if (result.success) {
     const output = quiet ? "" : `ESLint: ✓ No issues found`;
-    return { exitCode: 0, output };
+    return { exitCode: 0, output, durationMs };
   } else {
     const output = result.error ?? "ESLint validation failed";
-    return { exitCode: 1, output };
+    return { exitCode: 1, output, durationMs };
   }
 }
