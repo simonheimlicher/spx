@@ -24,23 +24,33 @@ Validation is a first-class CLI domain (`spx validation`) that works as a global
 
 ### Level Assignment
 
-| Component                  | Level | Justification                                     |
-| -------------------------- | ----- | ------------------------------------------------- |
-| `discoverTool()`           | 1     | Pure function with mocked filesystem              |
-| `detectProjectConfig()`    | 1     | Pure function finding config files                |
-| `buildEslintArgs()`        | 1     | Pure function constructing CLI argument arrays    |
-| `buildTypeScriptArgs()`    | 1     | Pure function selecting tsconfig based on scope   |
-| `parseStdinJson()`         | 1     | Pure async parser for hook input                  |
-| `validateAndExpandFiles()` | 1     | Pure function expanding paths to TypeScript files |
-| Tool discovery integration | 2     | Integration finding real tools in PATH            |
-| ESLint validation step     | 2     | Integration with real ESLint binary on fixtures   |
-| TypeScript validation      | 2     | Integration with real tsc binary on fixtures      |
-| Circular dependency check  | 2     | Integration with real madge binary on fixtures    |
-| CLI command integration    | 2     | Full `spx validation` command execution           |
+| Component                  | Level  | Justification                                     |
+| -------------------------- | ------ | ------------------------------------------------- |
+| `discoverTool()`           | 1      | Pure function with injectable filesystem          |
+| `detectProjectConfig()`    | 1      | Pure function finding config files                |
+| `buildEslintArgs()`        | 1      | Pure function constructing CLI argument arrays    |
+| `buildTypeScriptArgs()`    | 1      | Pure function selecting tsconfig based on scope   |
+| `parseStdinJson()`         | 1      | Pure async parser for hook input                  |
+| `validateAndExpandFiles()` | 1      | Pure function expanding paths to TypeScript files |
+| Tool discovery integration | 2      | Integration finding real tools in PATH            |
+| ESLint validation step     | 2      | Integration with real ESLint binary on fixtures   |
+| TypeScript validation      | 2      | Integration with real tsc binary on fixtures      |
+| Circular dependency check  | 2      | Integration with real madge binary on fixtures    |
+| CLI command functions      | 2 only | Thin orchestration; pure logic already tested     |
 
 ### Escalation Rationale
 
 - **1 → 2**: Unit tests verify argument construction and discovery logic, Level 2 verifies real validation tools work on fixture projects and CLI commands produce expected output
+
+### CLI Commands: Level 2 Only
+
+CLI command functions (`typescriptCommand()`, `lintCommand()`, etc.) are **thin orchestration layers**:
+
+1. Call `discoverTool()` → already unit tested
+2. Call validation step functions → already unit tested
+3. Map results to exit codes → trivial (`success ? 0 : 1`)
+
+No additional unit tests needed. Integration tests with temp fixtures verify the wiring works.
 
 ## Feature Integration Tests (Level 2)
 

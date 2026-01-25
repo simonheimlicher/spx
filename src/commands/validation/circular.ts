@@ -3,7 +3,9 @@
  *
  * Runs madge to detect circular dependencies.
  */
-import { discoverTool, formatSkipMessage } from "../../validation/discovery";
+import { getTypeScriptScope } from "../../validation/config/scope.js";
+import { discoverTool, formatSkipMessage } from "../../validation/discovery/index.js";
+import { validateCircularDependencies } from "../../validation/steps/circular.js";
 import type { CircularCommandOptions, ValidationCommandResult } from "./types";
 
 /**
@@ -16,21 +18,31 @@ export async function circularCommand(options: CircularCommandOptions): Promise<
   const { cwd, quiet } = options;
 
   // Discover madge
-  const result = await discoverTool("madge", { projectRoot: cwd });
-  if (!result.found) {
-    const skipMessage = formatSkipMessage("circular dependency check", result);
+  const toolResult = await discoverTool("madge", { projectRoot: cwd });
+  if (!toolResult.found) {
+    const skipMessage = formatSkipMessage("circular dependency check", toolResult);
     return { exitCode: 0, output: skipMessage };
   }
 
-  // TODO: Implement actual circular dependency check using src/validation/steps/circular.ts
-  // For now, return placeholder
-  if (!quiet) {
-    return {
-      exitCode: 0,
-      output:
-        `Circular dependency check: using ${result.location.path} (${result.location.source})\n(implementation pending story-47)`,
-    };
-  }
+  // Get scope configuration from tsconfig (circular always uses full scope)
+  const scopeConfig = getTypeScriptScope("full");
 
-  return { exitCode: 0, output: "" };
+  // Run circular dependency validation
+  const result = await validateCircularDependencies("full", scopeConfig);
+
+  // Map result to command output
+  if (result.success) {
+    const output = quiet ? "" : `Circular dependencies: ✓ None found`;
+    return { exitCode: 0, output };
+  } else {
+    // Format circular dependency output
+    let output = result.error ?? "Circular dependencies found";
+    if (result.circularDependencies && result.circularDependencies.length > 0) {
+      const cycles = result.circularDependencies
+        .map((cycle) => `  ${cycle.join(" → ")}`)
+        .join("\n");
+      output = `Circular dependencies found:\n${cycles}`;
+    }
+    return { exitCode: 1, output };
+  }
 }

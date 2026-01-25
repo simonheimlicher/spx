@@ -76,18 +76,48 @@
 
 ## Testing Strategy
 
-**Level 1 (Unit):**
+### Rationale: Integration Tests Only
 
-- Command functions accept correct options
-- Commands call appropriate validation steps
-- Graceful skip logic works
+The command functions are **thin orchestration layers** that:
 
-**Level 2 (Integration):**
+1. Call `discoverTool()` (already unit tested in `src/validation/discovery/`)
+2. Call validation step functions (already unit tested in `src/validation/steps/`)
+3. Map results to exit codes (`success ? 0 : 1` - trivial)
 
-- `spx validation typescript` on fixture with errors → exit 1
-- `spx validation lint` on fixture with errors → exit 1
-- `spx validation all` on clean fixture → exit 0
-- Missing tool → graceful skip message, exit 0
+**No Level 1 unit tests needed** because:
+
+- Pure functions (`buildTypeScriptArgs()`, `buildEslintArgs()`, etc.) already have unit tests
+- Command argument parsing is handled by Commander.js (trusted library)
+- The commands contain no complex pure logic worth isolating
+
+**Level 2 integration tests provide:**
+
+- Progress tests: Fast feedback during implementation
+- Regression tests: Catch if wiring breaks
+- Debug value: Fixture projects make failures reproducible
+
+### Level 2 (Integration) - In `tests/integration/validation/`
+
+Uses `withTestEnv()` with temp fixture projects in `os.tmpdir()`:
+
+| Test Case               | Fixture                       | Expected                      |
+| ----------------------- | ----------------------------- | ----------------------------- |
+| TypeScript finds errors | Project with type errors      | exit 1, output contains error |
+| TypeScript passes       | Clean project                 | exit 0                        |
+| ESLint finds errors     | Project with lint violations  | exit 1                        |
+| ESLint passes           | Clean project                 | exit 0                        |
+| Circular finds cycles   | Project with circular imports | exit 1                        |
+| Circular passes         | Clean project                 | exit 0                        |
+| All passes              | Clean project                 | exit 0                        |
+| Missing tool            | Empty PATH                    | exit 0, skip message          |
+
+### Test File Location
+
+```
+tests/integration/validation/
+├── commands.integration.test.ts  # CLI command tests (story-47)
+└── ... (existing validation step tests)
+```
 
 ## Definition of Done
 

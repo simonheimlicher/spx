@@ -3,7 +3,9 @@
  *
  * Runs TypeScript type checking using tsc.
  */
-import { discoverTool, formatSkipMessage } from "../../validation/discovery";
+import { getTypeScriptScope } from "../../validation/config/scope.js";
+import { discoverTool, formatSkipMessage } from "../../validation/discovery/index.js";
+import { validateTypeScript } from "../../validation/steps/typescript.js";
 import type { TypeScriptCommandOptions, ValidationCommandResult } from "./types";
 
 /**
@@ -13,24 +15,27 @@ import type { TypeScriptCommandOptions, ValidationCommandResult } from "./types"
  * @returns Command result with exit code and output
  */
 export async function typescriptCommand(options: TypeScriptCommandOptions): Promise<ValidationCommandResult> {
-  const { cwd, quiet } = options;
+  const { cwd, scope = "full", files, quiet } = options;
 
   // Discover tsc (provided by typescript package)
-  const result = await discoverTool("typescript", { projectRoot: cwd });
-  if (!result.found) {
-    const skipMessage = formatSkipMessage("TypeScript", result);
+  const toolResult = await discoverTool("typescript", { projectRoot: cwd });
+  if (!toolResult.found) {
+    const skipMessage = formatSkipMessage("TypeScript", toolResult);
     return { exitCode: 0, output: skipMessage };
   }
 
-  // TODO: Implement actual TypeScript validation using src/validation/steps/typescript.ts
-  // For now, return placeholder
-  if (!quiet) {
-    return {
-      exitCode: 0,
-      output:
-        `TypeScript validation: using ${result.location.path} (${result.location.source})\n(implementation pending story-47)`,
-    };
-  }
+  // Get scope configuration from tsconfig
+  const scopeConfig = getTypeScriptScope(scope);
 
-  return { exitCode: 0, output: "" };
+  // Run TypeScript validation
+  const result = await validateTypeScript(scope, scopeConfig, files);
+
+  // Map result to command output
+  if (result.success) {
+    const output = quiet ? "" : `TypeScript: ✓ No type errors`;
+    return { exitCode: 0, output };
+  } else {
+    const output = result.error ?? "TypeScript validation failed";
+    return { exitCode: 1, output };
+  }
 }
