@@ -233,5 +233,37 @@ describe("spx session prune/archive commands", () => {
       expect(result.exitCode).not.toBe(0);
       expect(result.stderr).toContain("already archived");
     });
+
+    it("GIVEN archive directory missing WHEN archive THEN creates directory and archives (FR2)", async () => {
+      // Setup: Create fresh temp dir with only todo/doing (NO archive directory)
+      const noArchiveTempDir = await mkdtemp(join(tmpdir(), "spx-no-archive-"));
+      const noArchiveSessionsDir = join(noArchiveTempDir, ".spx", "sessions");
+      await mkdir(join(noArchiveSessionsDir, "todo"), { recursive: true });
+      await mkdir(join(noArchiveSessionsDir, "doing"), { recursive: true });
+      // Intentionally NOT creating archive directory
+
+      try {
+        const sessionId = "2026-01-15_10-00-00";
+        await writeFile(
+          join(noArchiveSessionsDir, "todo", `${sessionId}.md`),
+          "# Test Session",
+        );
+
+        const { exitCode, stdout } = await execa(
+          "node",
+          ["bin/spx.js", "session", "archive", sessionId, "--sessions-dir", noArchiveSessionsDir],
+          { cwd: process.cwd() },
+        );
+
+        expect(exitCode).toBe(0);
+        expect(stdout).toContain("Archived");
+
+        // Verify archive directory was created and file moved
+        const archiveFiles = await readdir(join(noArchiveSessionsDir, "archive"));
+        expect(archiveFiles).toContain(`${sessionId}.md`);
+      } finally {
+        await rm(noArchiveTempDir, { recursive: true, force: true });
+      }
+    });
   });
 });

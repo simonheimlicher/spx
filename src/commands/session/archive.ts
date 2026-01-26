@@ -4,8 +4,8 @@
  * @module commands/session/archive
  */
 
-import { rename, stat } from "node:fs/promises";
-import { join } from "node:path";
+import { mkdir, rename, stat } from "node:fs/promises";
+import { dirname, join } from "node:path";
 
 import { SessionNotFoundError } from "../../session/errors.js";
 import { DEFAULT_SESSION_CONFIG, type SessionDirectoryConfig } from "../../session/show.js";
@@ -113,6 +113,9 @@ export async function archiveCommand(options: ArchiveOptions): Promise<string> {
 
   // Resolve source and target paths
   const { source, target } = await resolveArchivePaths(options.sessionId, config);
+
+  // Ensure archive directory exists (FR2: create if missing)
+  await mkdir(dirname(target), { recursive: true });
 
   // Move to archive
   await rename(source, target);
