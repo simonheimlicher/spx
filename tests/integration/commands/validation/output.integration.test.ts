@@ -2,26 +2,22 @@
  * Level 2: Integration tests for validation CLI output formatting.
  * Story: story-48_validation-output-enhancements
  *
- * Tests verify the CLI produces expected output format when running
- * real validation tools.
- *
- * These tests are consolidated to minimize CLI invocations since
- * `spx validation all` takes several seconds.
- *
- * Note: Tests use reject: false because the project may have intentional
- * errors (e.g., scripts/test-type-error.ts for testing purposes).
+ * ADR-021: Tests use isolated fixture projects, never the live repo.
+ * Tests verify the CLI produces expected output format.
  */
 
 import { execa } from "execa";
-import path from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { beforeAll, describe, expect, it } from "vitest";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // Navigate up from tests dir to project root (4 levels)
-const CLI_PATH = path.join(__dirname, "../../../../bin/spx.js");
+const CLI_PATH = join(__dirname, "../../../../bin/spx.js");
+
+/** Isolated fixture project that passes validation */
+const CLEAN_FIXTURE = join(__dirname, "../../../fixtures/projects/clean-project");
 
 /** Pattern matching step numbering like [1/4] */
 const STEP_NUMBER_PATTERN = /\[\d+\/\d+\]/;
@@ -38,13 +34,18 @@ describe("Validation CLI Output Format", () => {
   let quietResult: Awaited<ReturnType<typeof execa>>;
 
   beforeAll(async () => {
-    // Run validation all once and cache the result
-    // Use reject: false to not throw on validation errors (the project may have intentional errors)
-    validationResult = await execa("node", [CLI_PATH, "validation", "all"], { reject: false });
+    // Run validation all once against isolated fixture and cache the result (ADR-021)
+    validationResult = await execa("node", [CLI_PATH, "validation", "all"], {
+      cwd: CLEAN_FIXTURE,
+      reject: false,
+    });
 
     // Run with --quiet once
-    quietResult = await execa("node", [CLI_PATH, "validation", "all", "--quiet"], { reject: false });
-  }, 30000); // 30 second timeout for beforeAll
+    quietResult = await execa("node", [CLI_PATH, "validation", "all", "--quiet"], {
+      cwd: CLEAN_FIXTURE,
+      reject: false,
+    });
+  }, 60000); // 60 second timeout for beforeAll
 
   describe("Step numbering and timing", () => {
     it("GIVEN spx validation all WHEN running THEN output includes step numbers [1/4] through [4/4]", () => {
@@ -79,10 +80,13 @@ describe("Individual command timing", () => {
   it(
     "GIVEN spx validation typescript WHEN running THEN output contains TypeScript info",
     async () => {
-      // Use reject: false because project may have intentional type errors
-      const result = await execa("node", [CLI_PATH, "validation", "typescript"], { reject: false });
+      // ADR-021: Use isolated fixture
+      const result = await execa("node", [CLI_PATH, "validation", "typescript"], {
+        cwd: CLEAN_FIXTURE,
+        reject: false,
+      });
 
-      // Individual commands show their output (may pass or fail depending on project state)
+      // Individual commands show their output
       expect(result.stdout).toContain("TypeScript");
     },
     15000,

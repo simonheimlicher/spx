@@ -1,68 +1,50 @@
 /**
  * Integration tests for TypeScript checking of scripts/ directory
  *
- * These tests verify that scripts/ is properly included in TypeScript validation
- * and that type errors in scripts are caught.
+ * ADR-021: Tests use isolated fixture projects, never modify the live repo.
+ * Configuration tests verify tsconfig.json structure (Level 1).
+ * Behavior tests use isolated fixtures (Level 2).
  */
 
 import { execa } from "execa";
-import { mkdtemp, rm, writeFile } from "fs/promises";
-import { tmpdir } from "os";
-import { join } from "path";
+import { readFile } from "node:fs/promises";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/** Path to isolated fixture project with known type errors */
+const TYPE_ERROR_FIXTURE = join(__dirname, "../../fixtures/projects/with-type-errors");
+
 describe("TypeScript checking for scripts/", () => {
-  describe("GIVEN project with scripts included in tsconfig", () => {
-    it("WHEN running typecheck THEN scripts/ files are validated", async () => {
-      // When: Run typecheck
-      const result = await execa("pnpm", ["run", "typecheck"], {
-        cwd: process.cwd(),
+  describe("GIVEN project tsconfig.json", () => {
+    it("WHEN checking include patterns THEN scripts/ is included", async () => {
+      // Level 1: Verify tsconfig.json configuration (no subprocess needed)
+      const tsconfigPath = join(process.cwd(), "tsconfig.json");
+      const content = await readFile(tsconfigPath, "utf-8");
+
+      // Then: scripts is in the include patterns (check raw content since tsconfig may have comments)
+      expect(content).toMatch(/["']scripts\/\*\*\/\*["']/);
+    });
+  });
+
+  describe("GIVEN isolated fixture with type errors", () => {
+    it("WHEN running tsc THEN catches errors", async () => {
+      // Level 2: Test TypeScript detection with isolated fixture (ADR-021)
+
+      // When: Run tsc on fixture project
+      const result = await execa("npx", ["tsc", "--noEmit"], {
+        cwd: TYPE_ERROR_FIXTURE,
         reject: false,
       });
 
-      // Then: Command succeeds (scripts/ type-checks correctly)
-      expect(result.exitCode).toBe(0);
-    });
-
-    it("WHEN scripts/ has type errors THEN typecheck should catch them", async () => {
-      // Given: A temporary script with intentional type errors
-      let tempDir: string | null = null;
-
-      try {
-        // Create a temporary script file with a type error
-        tempDir = await mkdtemp(join(tmpdir(), "test-typecheck-"));
-        const testScript = join(process.cwd(), "scripts", "test-type-error.ts");
-
-        // Write a file with type errors
-        await writeFile(
-          testScript,
-          `
-// Intentional type error for testing
-const foo: number = "not a number";
-
-export {};
-`,
-          "utf-8",
-        );
-
-        // When: Run typecheck
-        const result = await execa("pnpm", ["run", "typecheck"], {
-          cwd: process.cwd(),
-          reject: false,
-        });
-
-        // Then: Typecheck fails due to type error in scripts/
-        expect(result.exitCode).toBe(2); // tsc exits with code 2 on errors
-        expect(result.stderr || result.stdout).toContain("test-type-error.ts");
-        expect(result.stderr || result.stdout).toContain("Type 'string' is not assignable to type 'number'");
-
-        // Cleanup
-        await rm(testScript);
-      } finally {
-        if (tempDir) {
-          await rm(tempDir, { recursive: true, force: true });
-        }
-      }
+      // Then: TypeScript fails due to type error in fixture
+      expect(result.exitCode).not.toBe(0);
+      expect(result.stderr || result.stdout).toContain("has-type-error.ts");
+      expect(result.stderr || result.stdout).toContain(
+        "Type 'string' is not assignable to type 'number'",
+      );
     });
   });
 

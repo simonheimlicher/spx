@@ -2,38 +2,39 @@
  * Level 2: Integration tests for CLI validation commands
  * Story: story-47_validation-commands
  *
- * Tests the CLI command wiring to validation step functions.
- * Uses the current project as a clean fixture (validation passes on HEAD).
+ * ADR-021: Tests use isolated fixture projects, never the live repo.
+ * Tests verify validation commands run and produce expected output format.
  */
 import { execa } from "execa";
-import path from "path";
-import { fileURLToPath } from "url";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const CLI_PATH = path.join(__dirname, "../../../bin/spx.js");
-const PROJECT_ROOT = path.join(__dirname, "../../..");
+const CLI_PATH = join(__dirname, "../../../bin/spx.js");
+
+/** Isolated fixture project that passes all validation */
+const CLEAN_FIXTURE = join(__dirname, "../../fixtures/projects/clean-project");
 
 describe("spx validation commands", () => {
   describe("spx validation typescript", () => {
-    it("GIVEN clean project WHEN running typescript validation THEN exits 0", async () => {
-      // When: Run typescript validation on current project
+    it("GIVEN clean fixture WHEN running typescript validation THEN exits 0", async () => {
+      // When: Run typescript validation on isolated fixture
       const result = await execa("node", [CLI_PATH, "validation", "typescript"], {
-        cwd: PROJECT_ROOT,
+        cwd: CLEAN_FIXTURE,
         reject: false,
       });
 
-      // Then: Should pass (current project is clean)
+      // Then: Should pass (fixture is clean)
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain("TypeScript");
     });
 
     it("GIVEN quiet flag WHEN running typescript validation THEN suppresses output", async () => {
-      // When: Run with --quiet
+      // When: Run with --quiet on isolated fixture
       const result = await execa("node", [CLI_PATH, "validation", "typescript", "--quiet"], {
-        cwd: PROJECT_ROOT,
+        cwd: CLEAN_FIXTURE,
         reject: false,
       });
 
@@ -43,10 +44,10 @@ describe("spx validation commands", () => {
   });
 
   describe("spx validation lint", () => {
-    it("GIVEN clean project WHEN running lint validation THEN exits 0", async () => {
-      // When: Run lint validation on current project
+    it("GIVEN clean fixture WHEN running lint validation THEN exits 0", async () => {
+      // When: Run lint validation on isolated fixture
       const result = await execa("node", [CLI_PATH, "validation", "lint"], {
-        cwd: PROJECT_ROOT,
+        cwd: CLEAN_FIXTURE,
         reject: false,
       });
 
@@ -57,14 +58,14 @@ describe("spx validation commands", () => {
   });
 
   describe("spx validation circular", () => {
-    it("GIVEN clean project WHEN running circular validation THEN exits 0", async () => {
-      // When: Run circular dependency check
+    it("GIVEN clean fixture WHEN running circular validation THEN exits 0", async () => {
+      // When: Run circular dependency check on isolated fixture
       const result = await execa("node", [CLI_PATH, "validation", "circular"], {
-        cwd: PROJECT_ROOT,
+        cwd: CLEAN_FIXTURE,
         reject: false,
       });
 
-      // Then: Should pass (no circular deps)
+      // Then: Should pass (no circular deps in fixture)
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain("Circular");
     });
@@ -72,11 +73,11 @@ describe("spx validation commands", () => {
 
   describe("spx validation all", () => {
     it(
-      "GIVEN clean project WHEN running all validations THEN exits 0",
+      "GIVEN clean fixture WHEN running all validations THEN exits 0",
       async () => {
-        // When: Run all validations
+        // When: Run all validations on isolated fixture
         const result = await execa("node", [CLI_PATH, "validation", "all"], {
-          cwd: PROJECT_ROOT,
+          cwd: CLEAN_FIXTURE,
           reject: false,
         });
 
@@ -88,12 +89,10 @@ describe("spx validation commands", () => {
   });
 
   describe("graceful degradation", () => {
-    it("GIVEN tool discovery succeeds WHEN running validation THEN executes validation", async () => {
-      // Note: Testing "missing tool" is difficult because discoverTool()
-      // checks node_modules/.bin which exists in the project.
-      // Instead, we verify that when the tool IS found, validation runs.
+    it("GIVEN isolated fixture WHEN running validation THEN executes without skipping", async () => {
+      // Verify validation actually runs (not skipped due to missing tools)
       const result = await execa("node", [CLI_PATH, "validation", "circular"], {
-        cwd: PROJECT_ROOT,
+        cwd: CLEAN_FIXTURE,
         reject: false,
       });
 
