@@ -3,7 +3,7 @@
  * Graduated from story-32, story-43, and story-54
  */
 import { describe, it, expect } from "vitest";
-import { filterWorkItemDirectories, buildWorkItemList, normalizePath } from "@/scanner/walk";
+import { filterWorkItemDirectories, buildWorkItemList, normalizePath, walkDirectory } from "@/scanner/walk";
 import type { DirectoryEntry } from "@/types";
 
 describe("filterWorkItemDirectories", () => {
@@ -157,5 +157,53 @@ describe("normalizePath", () => {
 
     // Then
     expect(normalized).toBe(unixPath);
+  });
+});
+
+describe("walkDirectory - Path Traversal Security", () => {
+  /**
+   * Security tests for path traversal vulnerability mitigation
+   * Tests various path traversal attack vectors
+   */
+
+  it("GIVEN path with parent directory traversal WHEN walking THEN throws error", async () => {
+    // Given: Path with .. attempting to traverse up
+    const maliciousPath = "../../../etc/passwd";
+
+    // When/Then: Should reject the path
+    await expect(walkDirectory(maliciousPath)).rejects.toThrow("Invalid directory path provided");
+  });
+
+  it("GIVEN path with embedded parent directory WHEN walking THEN throws error", async () => {
+    // Given: Path with .. in the middle
+    const maliciousPath = "specs/../../../etc/passwd";
+
+    // When/Then: Should reject the path
+    await expect(walkDirectory(maliciousPath)).rejects.toThrow("Invalid directory path provided");
+  });
+
+  it("GIVEN absolute path WHEN walking THEN throws error", async () => {
+    // Given: Absolute path starting with /
+    const absolutePath = "/etc/passwd";
+
+    // When/Then: Should reject absolute paths
+    await expect(walkDirectory(absolutePath)).rejects.toThrow("Invalid directory path provided");
+  });
+
+  it("GIVEN path with multiple parent traversals WHEN walking THEN throws error", async () => {
+    // Given: Path with multiple .. sequences
+    const maliciousPath = "../../../../../../etc/shadow";
+
+    // When/Then: Should reject the path
+    await expect(walkDirectory(maliciousPath)).rejects.toThrow("Invalid directory path provided");
+  });
+
+  it("GIVEN valid relative path WHEN walking THEN accepts path", async () => {
+    // Given: Valid relative path without traversal
+    const validPath = "specs/doing";
+
+    // When/Then: Should accept valid relative paths
+    // This will fail if directory doesn't exist, but won't fail the security check
+    await expect(walkDirectory(validPath)).rejects.toThrow(/Failed to walk directory/);
   });
 });
