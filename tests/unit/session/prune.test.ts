@@ -28,8 +28,8 @@ function createSession(overrides: {
   const id = overrides.id ?? "2026-01-13_10-00-00";
   return {
     id,
-    status: "todo",
-    path: `/test/sessions/todo/${id}.md`,
+    status: "archive",
+    path: `/test/sessions/archive/${id}.md`,
     metadata: {
       priority: overrides.priority ?? "medium",
       tags: [],

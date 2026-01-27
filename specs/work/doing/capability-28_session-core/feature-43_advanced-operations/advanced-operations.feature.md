@@ -2,7 +2,7 @@
 
 ## Observable Outcome
 
-Users can clean up old sessions with `spx session prune` and archive sessions with `spx session archive`, keeping the sessions directory organized.
+Users can clean up old **archived** sessions with `spx session prune` and move completed sessions to archive with `spx session archive`, keeping the sessions directory organized.
 
 ## Testing Strategy
 
@@ -11,41 +11,41 @@ Users can clean up old sessions with `spx session prune` and archive sessions wi
 
 ### Level Assignment
 
-| Component             | Level | Justification                             |
-| --------------------- | ----- | ----------------------------------------- |
-| Session sorting       | 1     | Pure function: sessions → sorted list     |
-| Keep N logic          | 1     | Pure function: count → sessions to delete |
-| Pattern matching      | 1     | Pure function: pattern → filter predicate |
-| Prune file deletion   | 2     | Needs real filesystem                     |
-| Archive file movement | 2     | Needs real filesystem                     |
+| Component                   | Level | Justification                             |
+| --------------------------- | ----- | ----------------------------------------- |
+| Session sorting             | 1     | Pure function: sessions → sorted list     |
+| Keep N logic                | 1     | Pure function: count → sessions to delete |
+| Pattern matching            | 1     | Pure function: pattern → filter predicate |
+| Prune archive file deletion | 2     | Needs real filesystem                     |
+| Archive file movement       | 2     | Needs real filesystem                     |
 
 ### Escalation Rationale
 
-- **1 → 2**: Unit tests verify sorting and selection logic; integration tests verify actual file deletion and movement
+- **1 → 2**: Unit tests verify sorting and selection logic; integration tests verify actual file deletion from archive and movement to archive
 
 ## Feature Integration Tests (Level 2)
 
 These tests verify that **cleanup operations** work correctly.
 
-### FI1: Prune keeps N most recent
+### FI1: Prune keeps N most recent archived sessions
 
 ```typescript
 // tests/integration/session/advanced-operations.integration.test.ts
 describe("Feature: Advanced Session Operations", () => {
-  it("GIVEN 10 sessions WHEN prune --keep 5 THEN 5 oldest deleted", async () => {
-    // Given: 10 sessions in todo
+  it("GIVEN 10 archived sessions WHEN prune --keep 5 THEN 5 oldest deleted", async () => {
+    // Given: 10 sessions in archive
     const { sessionsDir } = await createTempSessionsDir();
     const sessionIds = [];
     for (let i = 0; i < 10; i++) {
-      sessionIds.push(await createSession(sessionsDir, { content: `Session ${i}` }));
+      sessionIds.push(await createArchivedSession(sessionsDir, { content: `Session ${i}` }));
       await sleep(10); // Ensure distinct timestamps
     }
 
     // When: Prune with keep 5
     await pruneSession(sessionsDir, { keep: 5 });
 
-    // Then: 5 most recent remain
-    const remaining = await listSessions(sessionsDir);
+    // Then: 5 most recent remain in archive
+    const remaining = await listSessions(sessionsDir, { status: "archive" });
     expect(remaining).toHaveLength(5);
     // Most recent 5 should remain
     const remainingIds = remaining.map(s => s.id);
@@ -56,23 +56,23 @@ describe("Feature: Advanced Session Operations", () => {
 });
 ```
 
-### FI2: Prune default keeps 5
+### FI2: Prune default keeps 5 archived sessions
 
 ```typescript
 describe("Feature: Advanced Session Operations", () => {
-  it("GIVEN 8 sessions WHEN prune (no args) THEN keeps 5", async () => {
-    // Given: 8 sessions
+  it("GIVEN 8 archived sessions WHEN prune (no args) THEN keeps 5", async () => {
+    // Given: 8 sessions in archive
     const { sessionsDir } = await createTempSessionsDir();
     for (let i = 0; i < 8; i++) {
-      await createSession(sessionsDir, { content: `Session ${i}` });
+      await createArchivedSession(sessionsDir, { content: `Session ${i}` });
       await sleep(10);
     }
 
     // When: Prune with default
     await pruneSession(sessionsDir);
 
-    // Then: 5 remain
-    const remaining = await listSessions(sessionsDir);
+    // Then: 5 remain in archive
+    const remaining = await listSessions(sessionsDir, { status: "archive" });
     expect(remaining).toHaveLength(5);
   });
 });
@@ -97,39 +97,12 @@ describe("Feature: Advanced Session Operations", () => {
 });
 ```
 
-### FI4: Prune only affects todo, not doing
-
-```typescript
-describe("Feature: Advanced Session Operations", () => {
-  it("GIVEN sessions in todo and doing WHEN prune THEN only todo affected", async () => {
-    // Given: 3 in todo, 2 in doing
-    const { sessionsDir } = await createTempSessionsDir();
-    for (let i = 0; i < 3; i++) {
-      await createSession(sessionsDir, { content: `Todo ${i}` });
-    }
-    const doingId1 = await createSession(sessionsDir, { content: "Doing 1" });
-    const doingId2 = await createSession(sessionsDir, { content: "Doing 2" });
-    await pickupSession(sessionsDir, doingId1);
-    await pickupSession(sessionsDir, doingId2);
-
-    // When: Prune with keep 1
-    await pruneSession(sessionsDir, { keep: 1 });
-
-    // Then: 1 in todo, 2 still in doing
-    const todoSessions = await listSessions(sessionsDir, { status: "todo" });
-    const doingSessions = await listSessions(sessionsDir, { status: "doing" });
-    expect(todoSessions).toHaveLength(1);
-    expect(doingSessions).toHaveLength(2);
-  });
-});
-```
-
 ## Capability Contribution
 
 This feature provides maintenance operations:
 
-- **Prune** prevents unbounded growth of session directory
-- **Archive** allows preserving sessions without cluttering active list
+- **Prune** prevents unbounded growth of archive directory by keeping only N most recent archived sessions
+- **Archive** moves completed sessions from todo/doing to archive for historical reference
 
 Depends on: [Core Operations](./../feature-21_core-operations/core-operations.feature.md) for list/delete primitives
 
@@ -137,9 +110,8 @@ Depends on: [Core Operations](./../feature-21_core-operations/core-operations.fe
 
 - [ ] All Level 1 tests pass (via story completion)
 - [ ] All Level 2 integration tests pass
-- [ ] `spx session prune` keeps 5 by default
-- [ ] `spx session prune --keep N` keeps N most recent
-- [ ] `spx session archive <id>` moves session to archive
-- [ ] Prune only affects todo directory, not doing
+- [ ] `spx session prune` keeps 5 archived sessions by default
+- [ ] `spx session prune --keep N` keeps N most recent archived sessions
+- [ ] `spx session archive <id>` moves session to archive directory
 
 **Note**: To see current stories in this feature, use `ls` or `find` to list story directories (e.g., `story-*`) within the feature's directory.

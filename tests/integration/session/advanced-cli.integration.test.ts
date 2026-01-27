@@ -33,11 +33,11 @@ describe("spx session prune/archive commands", () => {
 
   describe("prune command", () => {
     it("GIVEN 8 sessions WHEN prune (default) THEN 5 remain", async () => {
-      // Create 8 sessions
+      // Create 8 sessions in archive
       for (let i = 1; i <= 8; i++) {
         const sessionId = `2026-01-${String(i).padStart(2, "0")}_10-00-00`;
         await writeFile(
-          join(sessionsDir, "todo", `${sessionId}.md`),
+          join(sessionsDir, "archive", `${sessionId}.md`),
           `# Session ${i}`,
         );
       }
@@ -52,7 +52,7 @@ describe("spx session prune/archive commands", () => {
       expect(stdout).toContain("Deleted 3 sessions");
 
       // Verify 5 remain
-      const remaining = await readdir(join(sessionsDir, "todo"));
+      const remaining = await readdir(join(sessionsDir, "archive"));
       expect(remaining).toHaveLength(5);
     });
 
@@ -60,7 +60,7 @@ describe("spx session prune/archive commands", () => {
       for (let i = 1; i <= 10; i++) {
         const sessionId = `2026-01-${String(i).padStart(2, "0")}_10-00-00`;
         await writeFile(
-          join(sessionsDir, "todo", `${sessionId}.md`),
+          join(sessionsDir, "archive", `${sessionId}.md`),
           `# Session ${i}`,
         );
       }
@@ -75,7 +75,7 @@ describe("spx session prune/archive commands", () => {
       expect(stdout).toContain("Deleted 7 sessions");
 
       // Verify 3 remain
-      const remaining = await readdir(join(sessionsDir, "todo"));
+      const remaining = await readdir(join(sessionsDir, "archive"));
       expect(remaining).toHaveLength(3);
     });
 
@@ -83,7 +83,7 @@ describe("spx session prune/archive commands", () => {
       for (let i = 1; i <= 10; i++) {
         const sessionId = `2026-01-${String(i).padStart(2, "0")}_10-00-00`;
         await writeFile(
-          join(sessionsDir, "todo", `${sessionId}.md`),
+          join(sessionsDir, "archive", `${sessionId}.md`),
           `# Session ${i}`,
         );
       }
@@ -98,7 +98,7 @@ describe("spx session prune/archive commands", () => {
       expect(stdout).toContain("Would delete 5 sessions");
 
       // Verify none were actually deleted
-      const remaining = await readdir(join(sessionsDir, "todo"));
+      const remaining = await readdir(join(sessionsDir, "archive"));
       expect(remaining).toHaveLength(10);
     });
 
@@ -137,11 +137,11 @@ describe("spx session prune/archive commands", () => {
     });
 
     it("GIVEN fewer sessions than keep count WHEN prune THEN no sessions deleted", async () => {
-      // Create only 3 sessions
+      // Create only 3 sessions in archive
       for (let i = 1; i <= 3; i++) {
         const sessionId = `2026-01-${String(i).padStart(2, "0")}_10-00-00`;
         await writeFile(
-          join(sessionsDir, "todo", `${sessionId}.md`),
+          join(sessionsDir, "archive", `${sessionId}.md`),
           `# Session ${i}`,
         );
       }

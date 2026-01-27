@@ -2,10 +2,10 @@
 
 ## Functional Requirements
 
-### FR1: Delete oldest sessions keeping N most recent
+### FR1: Delete oldest archived sessions keeping N most recent
 
 ```gherkin
-GIVEN 10 sessions in todo directory
+GIVEN 10 sessions in archive directory
 WHEN pruneSessions({ keep: 5 }) is called
 THEN the 5 oldest sessions are deleted, 5 newest remain
 ```
@@ -17,7 +17,7 @@ THEN the 5 oldest sessions are deleted, 5 newest remain
 ### FR2: Default to keeping 5 sessions
 
 ```gherkin
-GIVEN 8 sessions in todo directory
+GIVEN 8 sessions in archive directory
 WHEN pruneSessions() is called without arguments
 THEN 3 oldest sessions are deleted, 5 newest remain
 ```
@@ -26,22 +26,24 @@ THEN 3 oldest sessions are deleted, 5 newest remain
 
 1. `src/session/prune.ts` [modify]: Add default value
 
-### FR3: Only prune todo directory, not doing
+### FR3: Only prune archive directory, not todo or doing
 
 ```gherkin
-GIVEN sessions in both todo and doing directories
+GIVEN sessions in todo, doing, and archive directories
 WHEN pruneSessions() is called
-THEN only todo sessions are considered for pruning
+THEN only archive sessions are considered for pruning
+AND todo sessions are never deleted (waiting to be picked up)
+AND doing sessions are never deleted (actively being worked on)
 ```
 
 #### Files created/modified
 
-1. `src/session/prune.ts` [modify]: Scope to todo only
+1. `src/session/prune.ts` [modify]: Scope to archive only
 
 ### FR4: Handle keep > available gracefully
 
 ```gherkin
-GIVEN 3 sessions in todo and keep=5
+GIVEN 3 sessions in archive and keep=5
 WHEN pruneSessions({ keep: 5 }) is called
 THEN no sessions are deleted (all 3 remain)
 ```
@@ -143,5 +145,5 @@ describe("selectSessionsToDelete", () => {
 
 - [ ] All Level 1 unit tests pass
 - [ ] Default keep=5 works correctly
-- [ ] Only todo directory affected
+- [ ] Only archive directory affected (not todo or doing)
 - [ ] Handles edge cases (keep > available)

@@ -55,24 +55,24 @@ export function validatePruneOptions(options: PruneOptions): void {
 }
 
 /**
- * Loads sessions from the todo directory.
+ * Loads sessions from the archive directory.
  */
-async function loadTodoSessions(config: SessionDirectoryConfig): Promise<Session[]> {
+async function loadArchiveSessions(config: SessionDirectoryConfig): Promise<Session[]> {
   try {
-    const files = await readdir(config.todoDir);
+    const files = await readdir(config.archiveDir);
     const sessions: Session[] = [];
 
     for (const file of files) {
       if (!file.endsWith(".md")) continue;
 
       const id = file.replace(".md", "");
-      const filePath = join(config.todoDir, file);
+      const filePath = join(config.archiveDir, file);
       const content = await readFile(filePath, "utf-8");
       const metadata = parseSessionMetadata(content);
 
       sessions.push({
         id,
-        status: "todo",
+        status: "archive",
         path: filePath,
         metadata,
       });
@@ -133,7 +133,7 @@ export async function pruneCommand(options: PruneOptions): Promise<string> {
     : DEFAULT_SESSION_CONFIG;
 
   // Load and sort sessions
-  const sessions = await loadTodoSessions(config);
+  const sessions = await loadArchiveSessions(config);
   const toPrune = selectSessionsToPrune(sessions, keep);
 
   if (toPrune.length === 0) {
