@@ -162,6 +162,10 @@ const config = [
     },
     rules: {
       "spx/no-bdd-try-catch-anti-pattern": "error",
+      // Rules set to "warn" until existing violations are fixed (463 violations detected)
+      // See feature-25_eslint-rules-enforcement for tracking
+      "spx/no-hardcoded-work-item-kinds": "warn",
+      "spx/no-hardcoded-statuses": "warn",
     },
   },
 

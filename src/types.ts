@@ -56,3 +56,15 @@ export interface DirectoryEntry {
  * Work item status
  */
 export type WorkItemStatus = "OPEN" | "IN_PROGRESS" | "DONE";
+
+/**
+ * Ordered list of work item statuses
+ *
+ * Used by both production code and tests to derive status values.
+ * Per ADR-21: Never hardcode status names - derive from this constant.
+ */
+export const WORK_ITEM_STATUSES: readonly WorkItemStatus[] = [
+  "OPEN",
+  "IN_PROGRESS",
+  "DONE",
+] as const;
