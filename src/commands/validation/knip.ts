@@ -2,9 +2,11 @@
  * Knip command for detecting unused code.
  *
  * Runs knip to find unused exports, dependencies, and files.
+ * Disabled by default - enable with KNIP_VALIDATION_ENABLED=1.
  */
 import { getTypeScriptScope } from "../../validation/config/scope.js";
 import { discoverTool, formatSkipMessage } from "../../validation/discovery/index.js";
+import { validationEnabled } from "../../validation/steps/eslint.js";
 import { validateKnip } from "../../validation/steps/knip.js";
 import type { KnipCommandOptions, ValidationCommandResult } from "./types";
 
@@ -17,6 +19,12 @@ import type { KnipCommandOptions, ValidationCommandResult } from "./types";
 export async function knipCommand(options: KnipCommandOptions): Promise<ValidationCommandResult> {
   const { cwd, quiet } = options;
   const startTime = Date.now();
+
+  // Knip is disabled by default - check if explicitly enabled
+  if (!validationEnabled("KNIP", { KNIP: false })) {
+    const output = quiet ? "" : "Knip: skipped (disabled by default, set KNIP_VALIDATION_ENABLED=1 to enable)";
+    return { exitCode: 0, output, durationMs: Date.now() - startTime };
+  }
 
   // Discover knip
   const toolResult = await discoverTool("knip", { projectRoot: cwd });
