@@ -9,7 +9,7 @@
 import { describe, expect, it } from "vitest";
 
 import { getTypeScriptScope, validateCircularDependencies, VALIDATION_SCOPES } from "@/validation";
-import { FIXTURES, withTestEnv } from "@test/harness/test-env";
+import { FIXTURES, HARNESS_TIMEOUT, withTestEnv } from "@test/harness/test-env";
 
 describe("validateCircularDependencies() integration", () => {
   describe("GIVEN fixture with circular dependencies", () => {
@@ -38,7 +38,7 @@ describe("validateCircularDependencies() integration", () => {
           process.chdir(originalCwd);
         }
       });
-    }, 15000); // Longer timeout for real madge execution
+    }, HARNESS_TIMEOUT); // Longer timeout for real madge execution
   });
 
   describe("GIVEN clean project", () => {
@@ -58,6 +58,6 @@ describe("validateCircularDependencies() integration", () => {
           process.chdir(originalCwd);
         }
       });
-    }, 15000);
+    }, HARNESS_TIMEOUT);
   });
 });

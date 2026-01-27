@@ -1,8 +1,6 @@
 import { existsSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { FIXTURES, withTestEnv } from "./test-env";
-
-const TIMEOUT_LONG = 30_000;
+import { FIXTURES, HARNESS_TIMEOUT, withTestEnv } from "./test-env";
 
 describe("withTestEnv()", () => {
   it(
@@ -26,7 +24,7 @@ describe("withTestEnv()", () => {
       // Note: Can't verify cleanup since directory is already deleted
       expect(capturedPath).toBeTruthy();
     },
-    TIMEOUT_LONG,
+    HARNESS_TIMEOUT,
   );
 
   it(
@@ -37,7 +35,7 @@ describe("withTestEnv()", () => {
         expect(path).toContain("with-type-errors");
       });
     },
-    TIMEOUT_LONG,
+    HARNESS_TIMEOUT,
   );
 
   it(
@@ -48,7 +46,7 @@ describe("withTestEnv()", () => {
         expect(path).toContain("with-lint-errors");
       });
     },
-    TIMEOUT_LONG,
+    HARNESS_TIMEOUT,
   );
 
   it(
@@ -59,7 +57,7 @@ describe("withTestEnv()", () => {
         expect(path).toContain("with-circular-deps");
       });
     },
-    TIMEOUT_LONG,
+    HARNESS_TIMEOUT,
   );
 
   it("exports all expected fixture constants", () => {
@@ -86,7 +84,7 @@ describe("withTestEnv()", () => {
       // Verify cleanup still happened despite error
       expect(existsSync(capturedPath)).toBe(false);
     },
-    TIMEOUT_LONG,
+    HARNESS_TIMEOUT,
   );
 
   it(
@@ -99,7 +97,7 @@ describe("withTestEnv()", () => {
         ),
       ).rejects.toThrow(/ENOENT|no such file or directory/i);
     },
-    TIMEOUT_LONG,
+    HARNESS_TIMEOUT,
   );
 
   it(
@@ -115,6 +113,6 @@ describe("withTestEnv()", () => {
         expect(existsSync(join(path, "src/clean.ts"))).toBe(true);
       });
     },
-    TIMEOUT_LONG,
+    HARNESS_TIMEOUT,
   );
 });

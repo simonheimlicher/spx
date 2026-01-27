@@ -9,7 +9,7 @@
 import { describe, expect, it } from "vitest";
 
 import { getTypeScriptScope, validateTypeScript, VALIDATION_SCOPES } from "@/validation";
-import { FIXTURES, withTestEnv } from "@test/harness/test-env";
+import { FIXTURES, HARNESS_TIMEOUT, withTestEnv } from "@test/harness/test-env";
 
 describe("validateTypeScript() integration", () => {
   describe("GIVEN fixture with type errors", () => {
@@ -38,7 +38,7 @@ describe("validateTypeScript() integration", () => {
           process.chdir(originalCwd);
         }
       });
-    }, 15000); // Longer timeout for real tsc execution
+    }, HARNESS_TIMEOUT); // Longer timeout for real tsc execution
   });
 
   describe("GIVEN clean project", () => {
@@ -58,6 +58,6 @@ describe("validateTypeScript() integration", () => {
           process.chdir(originalCwd);
         }
       });
-    }, 15000);
+    }, HARNESS_TIMEOUT);
   });
 });

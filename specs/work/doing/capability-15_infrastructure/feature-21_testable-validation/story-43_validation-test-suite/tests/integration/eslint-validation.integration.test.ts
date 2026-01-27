@@ -9,7 +9,7 @@
 import { describe, expect, it } from "vitest";
 
 import { getTypeScriptScope, validateESLint, VALIDATION_SCOPES, type ValidationContext } from "@/validation";
-import { FIXTURES, withTestEnv } from "@test/harness/test-env";
+import { FIXTURES, HARNESS_TIMEOUT, withTestEnv } from "@test/harness/test-env";
 
 describe("validateESLint() integration", () => {
   describe("GIVEN fixture with lint errors", () => {
@@ -42,7 +42,7 @@ describe("validateESLint() integration", () => {
           process.chdir(originalCwd);
         }
       });
-    }, 15000); // Longer timeout for real ESLint execution
+    }, HARNESS_TIMEOUT); // Longer timeout for real ESLint execution
   });
 
   describe("GIVEN clean project", () => {
@@ -69,6 +69,6 @@ describe("validateESLint() integration", () => {
           process.chdir(originalCwd);
         }
       });
-    }, 15000);
+    }, HARNESS_TIMEOUT);
   });
 });

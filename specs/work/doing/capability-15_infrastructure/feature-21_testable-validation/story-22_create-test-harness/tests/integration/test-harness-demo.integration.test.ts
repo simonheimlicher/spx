@@ -8,7 +8,7 @@
  * This file just verifies the harness infrastructure itself.
  */
 
-import { FIXTURES, withTestEnv } from "@test/harness/test-env";
+import { FIXTURES, HARNESS_TIMEOUT, withTestEnv } from "@test/harness/test-env";
 import { existsSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
@@ -20,7 +20,7 @@ describe("Test Harness Verification", () => {
       expect(path).toContain("clean-project");
       expect(existsSync(path)).toBe(true);
     });
-  }, 15000);
+  }, HARNESS_TIMEOUT);
 
   it("GIVEN any fixture WHEN harness completes THEN cleanup happens automatically", async () => {
     let tempPath = "";
@@ -34,5 +34,5 @@ describe("Test Harness Verification", () => {
     // Cleanup is handled in finally block of withTestEnv()
     // We captured the path to verify the test ran
     expect(tempPath).toContain("spx-test-");
-  }, 15000);
+  }, HARNESS_TIMEOUT);
 });

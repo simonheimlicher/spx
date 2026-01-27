@@ -1,12 +1,24 @@
-import { spawn } from "node:child_process";
-import { cp, mkdtemp, rm } from "node:fs/promises";
+import { cp, mkdtemp, rm, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+/** Project root resolved from this helper's location */
+const PROJECT_ROOT = resolve(__dirname, "../..");
 
 /**
  * Fixture project constants for validation tests.
  * These fixtures are minimal projects with specific validation failures.
  */
+/**
+ * Default timeout for tests using the test harness.
+ * Symlinked node_modules makes setup fast, but validation tools still need time.
+ */
+export const HARNESS_TIMEOUT = 30_000;
+
 export const FIXTURES = {
   WITH_TYPE_ERRORS: "with-type-errors",
   WITH_LINT_ERRORS: "with-lint-errors",
@@ -38,8 +50,9 @@ export interface TestEnvOptions {
  * This harness:
  * 1. Creates a temporary directory
  * 2. Copies the specified fixture project into it
- * 3. Runs the test callback with the temp directory path
- * 4. Cleans up the temp directory after the test (even if test fails)
+ * 3. Symlinks node_modules from project root (fast, no install needed)
+ * 4. Runs the test callback with the temp directory path
+ * 5. Cleans up the temp directory after the test (even if test fails)
  *
  * @param opts - Configuration for the test environment
  * @param testFn - Test callback that receives the environment context
@@ -52,42 +65,6 @@ export interface TestEnvOptions {
  * });
  * ```
  */
-/**
- * Installs dependencies in a fixture directory.
- *
- * Runs `pnpm install --silent` in the specified directory and waits for completion.
- * Captures stderr output for error reporting.
- *
- * @param cwd - Directory containing package.json where dependencies should be installed
- * @throws Error if pnpm install exits with non-zero code or fails to spawn
- * @private
- */
-async function installDependencies(cwd: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const pnpmProcess = spawn("pnpm", ["install", "--silent"], {
-      cwd,
-      stdio: "pipe", // Suppress output unless there's an error
-    });
-
-    let errorOutput = "";
-    pnpmProcess.stderr?.on("data", (data) => {
-      errorOutput += data.toString();
-    });
-
-    pnpmProcess.on("close", (code) => {
-      if (code === 0) {
-        resolve();
-      } else {
-        reject(new Error(`pnpm install failed with code ${code}: ${errorOutput}`));
-      }
-    });
-
-    pnpmProcess.on("error", (error) => {
-      reject(new Error(`Failed to spawn pnpm install: ${error.message}`));
-    });
-  });
-}
-
 export async function withTestEnv(
   opts: TestEnvOptions,
   testFn: (context: TestEnvContext) => Promise<void>,
@@ -97,13 +74,13 @@ export async function withTestEnv(
 
   try {
     // Copy fixture project to temp directory
-    const fixtureSource = join(process.cwd(), "tests", "fixtures", "projects", opts.fixture);
+    const fixtureSource = join(PROJECT_ROOT, "tests", "fixtures", "projects", opts.fixture);
     const fixtureDest = join(tempDir, opts.fixture);
 
     await cp(fixtureSource, fixtureDest, { recursive: true });
 
-    // Install dependencies (TypeScript, etc.) in the fixture
-    await installDependencies(fixtureDest);
+    // Symlink node_modules from project root (fast, no install needed)
+    await symlink(join(PROJECT_ROOT, "node_modules"), join(fixtureDest, "node_modules"));
 
     // Run test callback with context
     await testFn({ path: fixtureDest });
