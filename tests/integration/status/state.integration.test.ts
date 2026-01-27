@@ -2,16 +2,17 @@
  * Level 2: Integration tests for filesystem operations
  * Stories: story-32_detect-tests-dir, story-43_parse-done-md, story-54_status-edge-cases
  */
-import { describe, it, expect } from "vitest";
 import {
+  getWorkItemStatus,
+  hasDoneMd,
   hasTestsDirectory,
   isTestsDirectoryEmpty,
-  hasDoneMd,
-  getWorkItemStatus,
   StatusDeterminationError,
 } from "@/status/state";
+import { WORK_ITEM_STATUSES } from "@/types";
 import path from "path";
 import { fileURLToPath } from "url";
+import { describe, expect, it } from "vitest";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -21,7 +22,7 @@ describe("hasTestsDirectory", () => {
     // Given
     const workItemPath = path.join(
       __dirname,
-      "../../fixtures/work-items/with-tests"
+      "../../fixtures/work-items/with-tests",
     );
 
     // When
@@ -35,7 +36,7 @@ describe("hasTestsDirectory", () => {
     // Given
     const workItemPath = path.join(
       __dirname,
-      "../../fixtures/work-items/no-tests"
+      "../../fixtures/work-items/no-tests",
     );
 
     // When
@@ -49,7 +50,7 @@ describe("hasTestsDirectory", () => {
     // Given
     const workItemPath = path.join(
       __dirname,
-      "../../fixtures/work-items/does-not-exist"
+      "../../fixtures/work-items/does-not-exist",
     );
 
     // When
@@ -65,7 +66,7 @@ describe("isTestsDirectoryEmpty", () => {
     // Given
     const testsPath = path.join(
       __dirname,
-      "../../fixtures/work-items/empty-tests/tests"
+      "../../fixtures/work-items/empty-tests/tests",
     );
 
     // When
@@ -79,7 +80,7 @@ describe("isTestsDirectoryEmpty", () => {
     // Given
     const testsPath = path.join(
       __dirname,
-      "../../fixtures/work-items/with-tests/tests"
+      "../../fixtures/work-items/with-tests/tests",
     );
 
     // When
@@ -93,7 +94,7 @@ describe("isTestsDirectoryEmpty", () => {
     // Given
     const testsPath = path.join(
       __dirname,
-      "../../fixtures/work-items/only-done/tests"
+      "../../fixtures/work-items/only-done/tests",
     );
 
     // When
@@ -107,7 +108,7 @@ describe("isTestsDirectoryEmpty", () => {
     // Given: .gitkeep and other dotfiles shouldn't count as test files
     const testsPath = path.join(
       __dirname,
-      "../../fixtures/work-items/empty-tests/tests"
+      "../../fixtures/work-items/empty-tests/tests",
     );
 
     // When
@@ -123,7 +124,7 @@ describe("hasDoneMd", () => {
     // Given
     const testsPath = path.join(
       __dirname,
-      "../../fixtures/work-items/done-item/tests"
+      "../../fixtures/work-items/done-item/tests",
     );
 
     // When
@@ -137,7 +138,7 @@ describe("hasDoneMd", () => {
     // Given
     const testsPath = path.join(
       __dirname,
-      "../../fixtures/work-items/in-progress/tests"
+      "../../fixtures/work-items/in-progress/tests",
     );
 
     // When
@@ -151,7 +152,7 @@ describe("hasDoneMd", () => {
     // Given
     const testsPath = path.join(
       __dirname,
-      "../../fixtures/work-items/done-is-dir/tests"
+      "../../fixtures/work-items/done-is-dir/tests",
     );
 
     // When
@@ -165,7 +166,7 @@ describe("hasDoneMd", () => {
     // Given
     const testsPath = path.join(
       __dirname,
-      "../../fixtures/work-items/wrong-case/tests"
+      "../../fixtures/work-items/wrong-case/tests",
     );
 
     // When
@@ -186,99 +187,99 @@ describe("getWorkItemStatus", () => {
     // Given
     const workItemPath = path.join(
       __dirname,
-      "../../fixtures/work-items/no-tests"
+      "../../fixtures/work-items/no-tests",
     );
 
     // When
     const status = await getWorkItemStatus(workItemPath);
 
     // Then
-    expect(status).toBe("OPEN");
+    expect(status).toBe(WORK_ITEM_STATUSES[0]);
   });
 
   it("GIVEN work item with tests but no DONE.md WHEN getting status THEN returns IN_PROGRESS", async () => {
     // Given
     const workItemPath = path.join(
       __dirname,
-      "../../fixtures/work-items/in-progress"
+      "../../fixtures/work-items/in-progress",
     );
 
     // When
     const status = await getWorkItemStatus(workItemPath);
 
     // Then
-    expect(status).toBe("IN_PROGRESS");
+    expect(status).toBe(WORK_ITEM_STATUSES[1]);
   });
 
   it("GIVEN work item with DONE.md WHEN getting status THEN returns DONE", async () => {
     // Given
     const workItemPath = path.join(
       __dirname,
-      "../../fixtures/work-items/done-item"
+      "../../fixtures/work-items/done-item",
     );
 
     // When
     const status = await getWorkItemStatus(workItemPath);
 
     // Then
-    expect(status).toBe("DONE");
+    expect(status).toBe(WORK_ITEM_STATUSES[2]);
   });
 
   it("GIVEN work item with empty tests dir WHEN getting status THEN returns OPEN", async () => {
     // Given
     const workItemPath = path.join(
       __dirname,
-      "../../fixtures/work-items/empty-tests"
+      "../../fixtures/work-items/empty-tests",
     );
 
     // When
     const status = await getWorkItemStatus(workItemPath);
 
     // Then
-    expect(status).toBe("OPEN");
+    expect(status).toBe(WORK_ITEM_STATUSES[0]);
   });
 
   it("GIVEN work item with only DONE.md WHEN getting status THEN returns DONE", async () => {
     // Given
     const workItemPath = path.join(
       __dirname,
-      "../../fixtures/work-items/only-done"
+      "../../fixtures/work-items/only-done",
     );
 
     // When
     const status = await getWorkItemStatus(workItemPath);
 
     // Then
-    expect(status).toBe("DONE");
+    expect(status).toBe(WORK_ITEM_STATUSES[2]);
   });
 
   it("GIVEN work item with DONE.md as directory WHEN getting status THEN returns IN_PROGRESS", async () => {
     // Given: DONE.md exists but is a directory (not a file)
     const workItemPath = path.join(
       __dirname,
-      "../../fixtures/work-items/done-is-dir"
+      "../../fixtures/work-items/done-is-dir",
     );
 
     // When
     const status = await getWorkItemStatus(workItemPath);
 
     // Then: Should treat as no DONE.md
-    expect(status).toBe("IN_PROGRESS");
+    expect(status).toBe(WORK_ITEM_STATUSES[1]);
   });
 
   it("GIVEN non-existent work item WHEN getting status THEN throws StatusDeterminationError", async () => {
     // Given
     const workItemPath = path.join(
       __dirname,
-      "../../fixtures/work-items/does-not-exist"
+      "../../fixtures/work-items/does-not-exist",
     );
 
     // When/Then
     await expect(getWorkItemStatus(workItemPath)).rejects.toThrow(
-      StatusDeterminationError
+      StatusDeterminationError,
     );
     await expect(getWorkItemStatus(workItemPath)).rejects.toThrow(
-      /Failed to determine status/
+      /Failed to determine status/,
     );
   });
 });
@@ -288,7 +289,7 @@ describe("Status determination performance", () => {
     // Given
     const workItemPath = path.join(
       __dirname,
-      "../../fixtures/work-items/done-item"
+      "../../fixtures/work-items/done-item",
     );
 
     // When: Measure multiple calls

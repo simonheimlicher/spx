@@ -2,8 +2,9 @@
  * Level 1: Pure function tests for status state machine
  * Story: story-21_state-machine
  */
-import { describe, it, expect } from "vitest";
 import { determineStatus } from "@/status/state";
+import { WORK_ITEM_STATUSES } from "@/types";
+import { describe, expect, it } from "vitest";
 
 describe("determineStatus", () => {
   it("GIVEN no tests dir WHEN determining status THEN returns OPEN", () => {
@@ -18,7 +19,7 @@ describe("determineStatus", () => {
     const status = determineStatus(flags);
 
     // Then
-    expect(status).toBe("OPEN");
+    expect(status).toBe(WORK_ITEM_STATUSES[0]);
   });
 
   it("GIVEN empty tests dir WHEN determining status THEN returns OPEN", () => {
@@ -33,7 +34,7 @@ describe("determineStatus", () => {
     const status = determineStatus(flags);
 
     // Then
-    expect(status).toBe("OPEN");
+    expect(status).toBe(WORK_ITEM_STATUSES[0]);
   });
 
   it("GIVEN tests dir with files but no DONE.md WHEN determining status THEN returns IN_PROGRESS", () => {
@@ -48,7 +49,7 @@ describe("determineStatus", () => {
     const status = determineStatus(flags);
 
     // Then
-    expect(status).toBe("IN_PROGRESS");
+    expect(status).toBe(WORK_ITEM_STATUSES[1]);
   });
 
   it("GIVEN tests dir with DONE.md and other files WHEN determining status THEN returns DONE", () => {
@@ -63,7 +64,7 @@ describe("determineStatus", () => {
     const status = determineStatus(flags);
 
     // Then
-    expect(status).toBe("DONE");
+    expect(status).toBe(WORK_ITEM_STATUSES[2]);
   });
 
   it("GIVEN only DONE.md in tests dir WHEN determining status THEN returns DONE", () => {
@@ -78,6 +79,6 @@ describe("determineStatus", () => {
     const status = determineStatus(flags);
 
     // Then
-    expect(status).toBe("DONE");
+    expect(status).toBe(WORK_ITEM_STATUSES[2]);
   });
 });

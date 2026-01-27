@@ -2,9 +2,9 @@
  * Level 1: Unit tests for directory walking functions
  * Graduated from story-32, story-43, and story-54
  */
-import { describe, it, expect } from "vitest";
-import { filterWorkItemDirectories, buildWorkItemList, normalizePath } from "@/scanner/walk";
-import type { DirectoryEntry } from "@/types";
+import { buildWorkItemList, filterWorkItemDirectories, normalizePath } from "@/scanner/walk";
+import { type DirectoryEntry, WORK_ITEM_KINDS } from "@/types";
+import { describe, expect, it } from "vitest";
 
 describe("filterWorkItemDirectories", () => {
   /**
@@ -83,7 +83,7 @@ describe("buildWorkItemList", () => {
     // Then
     expect(workItems).toHaveLength(1);
     expect(workItems[0]).toEqual({
-      kind: "capability",
+      kind: WORK_ITEM_KINDS[0],
       number: 20,
       slug: "core-cli",
       path: "/specs/capability-21_core-cli",
@@ -103,9 +103,9 @@ describe("buildWorkItemList", () => {
 
     // Then
     expect(workItems).toHaveLength(3);
-    expect(workItems[0].kind).toBe("capability");
-    expect(workItems[1].kind).toBe("feature");
-    expect(workItems[2].kind).toBe("story");
+    expect(workItems[0].kind).toBe(WORK_ITEM_KINDS[0]);
+    expect(workItems[1].kind).toBe(WORK_ITEM_KINDS[1]);
+    expect(workItems[2].kind).toBe(WORK_ITEM_KINDS[2]);
   });
 
   it("GIVEN invalid directory entry WHEN building list THEN throws error", () => {

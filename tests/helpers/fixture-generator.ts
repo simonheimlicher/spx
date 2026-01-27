@@ -7,8 +7,9 @@
  *
  * @see specs/doing/capability-21_core-cli/decisions/adr-003_e2e-fixture-generation.md
  */
-import { faker } from "@faker-js/faker";
 import type { WorkItemStatus } from "@/types";
+import { WORK_ITEM_KINDS, WORK_ITEM_STATUSES } from "@/types";
+import { faker } from "@faker-js/faker";
 
 /**
  * Configuration for fixture generation
@@ -161,12 +162,12 @@ function generateStatus(distribution: {
   const rand = faker.number.float({ min: 0, max: 1 });
 
   if (rand < distribution.done) {
-    return "DONE";
+    return WORK_ITEM_STATUSES[2];
   }
   if (rand < distribution.done + distribution.inProgress) {
-    return "IN_PROGRESS";
+    return WORK_ITEM_STATUSES[1];
   }
-  return "OPEN";
+  return WORK_ITEM_STATUSES[0];
 }
 
 /**
@@ -209,7 +210,7 @@ export function generateFixtureTree(config: FixtureConfig): FixtureTree {
     ) {
       const featNumber = generateBSPNumber(
         featIdx,
-        config.featuresPerCapability
+        config.featuresPerCapability,
       );
       const featSlug = generateSlug();
 
@@ -223,13 +224,13 @@ export function generateFixtureTree(config: FixtureConfig): FixtureTree {
       ) {
         const storyNumber = generateBSPNumber(
           storyIdx,
-          config.storiesPerFeature
+          config.storiesPerFeature,
         );
         const storySlug = generateSlug();
         const storyStatus = generateStatus(config.statusDistribution);
 
         featChildren.push({
-          kind: "story",
+          kind: WORK_ITEM_KINDS[2],
           number: storyNumber,
           slug: storySlug,
           status: storyStatus,
@@ -241,7 +242,7 @@ export function generateFixtureTree(config: FixtureConfig): FixtureTree {
       const featStatus = deriveStatus(featChildren);
 
       capChildren.push({
-        kind: "feature",
+        kind: WORK_ITEM_KINDS[1],
         number: featNumber,
         slug: featSlug,
         status: featStatus,
@@ -251,11 +252,11 @@ export function generateFixtureTree(config: FixtureConfig): FixtureTree {
 
     // Determine capability status from children (excluding ADRs)
     const capStatus = deriveStatus(
-      capChildren.filter((c) => c.kind !== "adr")
+      capChildren.filter((c) => c.kind !== "adr"),
     );
 
     nodes.push({
-      kind: "capability",
+      kind: WORK_ITEM_KINDS[0],
       number: capNumber,
       slug: capSlug,
       status: capStatus,
@@ -279,18 +280,18 @@ function deriveStatus(children: FixtureNode[]): WorkItemStatus {
     .map((c) => c.status!);
 
   if (statuses.length === 0) {
-    return "OPEN";
+    return WORK_ITEM_STATUSES[0];
   }
 
-  if (statuses.every((s) => s === "DONE")) {
-    return "DONE";
+  if (statuses.every((s) => s === WORK_ITEM_STATUSES[2])) {
+    return WORK_ITEM_STATUSES[2];
   }
 
-  if (statuses.every((s) => s === "OPEN")) {
-    return "OPEN";
+  if (statuses.every((s) => s === WORK_ITEM_STATUSES[0])) {
+    return WORK_ITEM_STATUSES[0];
   }
 
-  return "IN_PROGRESS";
+  return WORK_ITEM_STATUSES[1];
 }
 
 /**
@@ -333,8 +334,8 @@ export function collectStatuses(tree: FixtureTree): {
     for (const node of nodes) {
       if (node.status !== undefined) {
         counts.total++;
-        if (node.status === "DONE") counts.done++;
-        else if (node.status === "IN_PROGRESS") counts.inProgress++;
+        if (node.status === WORK_ITEM_STATUSES[2]) counts.done++;
+        else if (node.status === WORK_ITEM_STATUSES[1]) counts.inProgress++;
         else counts.open++;
       }
       traverse(node.children);

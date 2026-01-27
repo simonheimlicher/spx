@@ -12,6 +12,7 @@ import { describe, expect, it } from "vitest";
 
 import { buildSessionContent, hasFrontmatter } from "@/commands/session/handoff";
 import { parseSessionMetadata } from "@/session/list";
+import { WORK_ITEM_KINDS } from "@/types";
 
 describe("Frontmatter Detection", () => {
   it("GIVEN content with frontmatter WHEN hasFrontmatter THEN returns true", () => {
@@ -102,7 +103,7 @@ tags: [feature, api]
     const metadata = parseSessionMetadata(content);
 
     expect(metadata.priority).toBe("high");
-    expect(metadata.tags).toEqual(["feature", "api"]);
+    expect(metadata.tags).toEqual([WORK_ITEM_KINDS[1], "api"]);
   });
 
   it("GIVEN content with only priority WHEN parseSessionMetadata THEN extracts priority, defaults tags", () => {

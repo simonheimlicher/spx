@@ -1,15 +1,15 @@
-import { describe, it, expect } from "vitest";
 import { buildTree, type TreeBuildDeps } from "@/tree/build";
-import type { WorkItem } from "@/types";
+import { WORK_ITEM_KINDS, WORK_ITEM_STATUSES, type WorkItem } from "@/types";
+import { describe, expect, it } from "vitest";
 
 /**
  * Helper to create WorkItem with path
  */
 function createWorkItemWithPath(
-  kind: "capability" | "feature" | "story",
+  kind: (typeof WORK_ITEM_KINDS)[number],
   number: number,
   slug: string,
-  path: string
+  path: string,
 ): WorkItem {
   return {
     kind,
@@ -24,33 +24,33 @@ describe("buildTree - Status Rollup", () => {
     it("WHEN rolling up status THEN parent is DONE", async () => {
       // Given - status map: all features are DONE
       const statusMap: Record<string, string> = {
-        "/specs/capability-21_test": "OPEN", // Will be overridden by rollup
-        "/specs/capability-21_test/feature-32_feat1": "DONE",
-        "/specs/capability-21_test/feature-43_feat2": "DONE",
+        "/specs/capability-21_test": WORK_ITEM_STATUSES[0], // Will be overridden by rollup
+        "/specs/capability-21_test/feature-32_feat1": WORK_ITEM_STATUSES[2],
+        "/specs/capability-21_test/feature-43_feat2": WORK_ITEM_STATUSES[2],
       };
 
       const testDeps: TreeBuildDeps = {
-        getStatus: async (path) => statusMap[path] || "OPEN",
+        getStatus: async (path) => statusMap[path] || WORK_ITEM_STATUSES[0],
       };
 
       const workItems: WorkItem[] = [
         createWorkItemWithPath(
-          "capability",
+          WORK_ITEM_KINDS[0],
           20,
           "test",
-          "/specs/capability-21_test"
+          "/specs/capability-21_test",
         ),
         createWorkItemWithPath(
-          "feature",
+          WORK_ITEM_KINDS[1],
           32,
           "feat1",
-          "/specs/capability-21_test/feature-32_feat1"
+          "/specs/capability-21_test/feature-32_feat1",
         ),
         createWorkItemWithPath(
-          "feature",
+          WORK_ITEM_KINDS[1],
           43,
           "feat2",
-          "/specs/capability-21_test/feature-43_feat2"
+          "/specs/capability-21_test/feature-43_feat2",
         ),
       ];
 
@@ -58,7 +58,7 @@ describe("buildTree - Status Rollup", () => {
       const tree = await buildTree(workItems, testDeps);
 
       // Then - parent should be DONE (all children DONE)
-      expect(tree.nodes[0].status).toBe("DONE");
+      expect(tree.nodes[0].status).toBe(WORK_ITEM_STATUSES[2]);
     });
   });
 
@@ -66,33 +66,33 @@ describe("buildTree - Status Rollup", () => {
     it("WHEN rolling up status THEN parent is IN_PROGRESS", async () => {
       // Given - one feature is IN_PROGRESS
       const statusMap: Record<string, string> = {
-        "/specs/capability-21_test": "OPEN",
-        "/specs/capability-21_test/feature-32_feat1": "DONE",
-        "/specs/capability-21_test/feature-43_feat2": "IN_PROGRESS",
+        "/specs/capability-21_test": WORK_ITEM_STATUSES[0],
+        "/specs/capability-21_test/feature-32_feat1": WORK_ITEM_STATUSES[2],
+        "/specs/capability-21_test/feature-43_feat2": WORK_ITEM_STATUSES[1],
       };
 
       const testDeps: TreeBuildDeps = {
-        getStatus: async (path) => statusMap[path] || "OPEN",
+        getStatus: async (path) => statusMap[path] || WORK_ITEM_STATUSES[0],
       };
 
       const workItems: WorkItem[] = [
         createWorkItemWithPath(
-          "capability",
+          WORK_ITEM_KINDS[0],
           20,
           "test",
-          "/specs/capability-21_test"
+          "/specs/capability-21_test",
         ),
         createWorkItemWithPath(
-          "feature",
+          WORK_ITEM_KINDS[1],
           32,
           "feat1",
-          "/specs/capability-21_test/feature-32_feat1"
+          "/specs/capability-21_test/feature-32_feat1",
         ),
         createWorkItemWithPath(
-          "feature",
+          WORK_ITEM_KINDS[1],
           43,
           "feat2",
-          "/specs/capability-21_test/feature-43_feat2"
+          "/specs/capability-21_test/feature-43_feat2",
         ),
       ];
 
@@ -100,7 +100,7 @@ describe("buildTree - Status Rollup", () => {
       const tree = await buildTree(workItems, testDeps);
 
       // Then - parent should be IN_PROGRESS (any child IN_PROGRESS)
-      expect(tree.nodes[0].status).toBe("IN_PROGRESS");
+      expect(tree.nodes[0].status).toBe(WORK_ITEM_STATUSES[1]);
     });
   });
 
@@ -108,33 +108,33 @@ describe("buildTree - Status Rollup", () => {
     it("WHEN rolling up status THEN parent is IN_PROGRESS", async () => {
       // Given - mix of DONE and OPEN
       const statusMap: Record<string, string> = {
-        "/specs/capability-21_test": "OPEN",
-        "/specs/capability-21_test/feature-32_feat1": "DONE",
-        "/specs/capability-21_test/feature-43_feat2": "OPEN",
+        "/specs/capability-21_test": WORK_ITEM_STATUSES[0],
+        "/specs/capability-21_test/feature-32_feat1": WORK_ITEM_STATUSES[2],
+        "/specs/capability-21_test/feature-43_feat2": WORK_ITEM_STATUSES[0],
       };
 
       const testDeps: TreeBuildDeps = {
-        getStatus: async (path) => statusMap[path] || "OPEN",
+        getStatus: async (path) => statusMap[path] || WORK_ITEM_STATUSES[0],
       };
 
       const workItems: WorkItem[] = [
         createWorkItemWithPath(
-          "capability",
+          WORK_ITEM_KINDS[0],
           20,
           "test",
-          "/specs/capability-21_test"
+          "/specs/capability-21_test",
         ),
         createWorkItemWithPath(
-          "feature",
+          WORK_ITEM_KINDS[1],
           32,
           "feat1",
-          "/specs/capability-21_test/feature-32_feat1"
+          "/specs/capability-21_test/feature-32_feat1",
         ),
         createWorkItemWithPath(
-          "feature",
+          WORK_ITEM_KINDS[1],
           43,
           "feat2",
-          "/specs/capability-21_test/feature-43_feat2"
+          "/specs/capability-21_test/feature-43_feat2",
         ),
       ];
 
@@ -142,7 +142,7 @@ describe("buildTree - Status Rollup", () => {
       const tree = await buildTree(workItems, testDeps);
 
       // Then - parent should be IN_PROGRESS (mixed statuses)
-      expect(tree.nodes[0].status).toBe("IN_PROGRESS");
+      expect(tree.nodes[0].status).toBe(WORK_ITEM_STATUSES[1]);
     });
   });
 
@@ -150,33 +150,33 @@ describe("buildTree - Status Rollup", () => {
     it("WHEN rolling up status THEN parent is OPEN", async () => {
       // Given - all features are OPEN
       const statusMap: Record<string, string> = {
-        "/specs/capability-21_test": "IN_PROGRESS", // Will be overridden by rollup
-        "/specs/capability-21_test/feature-32_feat1": "OPEN",
-        "/specs/capability-21_test/feature-43_feat2": "OPEN",
+        "/specs/capability-21_test": WORK_ITEM_STATUSES[1], // Will be overridden by rollup
+        "/specs/capability-21_test/feature-32_feat1": WORK_ITEM_STATUSES[0],
+        "/specs/capability-21_test/feature-43_feat2": WORK_ITEM_STATUSES[0],
       };
 
       const testDeps: TreeBuildDeps = {
-        getStatus: async (path) => statusMap[path] || "OPEN",
+        getStatus: async (path) => statusMap[path] || WORK_ITEM_STATUSES[0],
       };
 
       const workItems: WorkItem[] = [
         createWorkItemWithPath(
-          "capability",
+          WORK_ITEM_KINDS[0],
           20,
           "test",
-          "/specs/capability-21_test"
+          "/specs/capability-21_test",
         ),
         createWorkItemWithPath(
-          "feature",
+          WORK_ITEM_KINDS[1],
           32,
           "feat1",
-          "/specs/capability-21_test/feature-32_feat1"
+          "/specs/capability-21_test/feature-32_feat1",
         ),
         createWorkItemWithPath(
-          "feature",
+          WORK_ITEM_KINDS[1],
           43,
           "feat2",
-          "/specs/capability-21_test/feature-43_feat2"
+          "/specs/capability-21_test/feature-43_feat2",
         ),
       ];
 
@@ -184,7 +184,7 @@ describe("buildTree - Status Rollup", () => {
       const tree = await buildTree(workItems, testDeps);
 
       // Then - parent should be OPEN (all children OPEN)
-      expect(tree.nodes[0].status).toBe("OPEN");
+      expect(tree.nodes[0].status).toBe(WORK_ITEM_STATUSES[0]);
     });
   });
 
@@ -192,40 +192,40 @@ describe("buildTree - Status Rollup", () => {
     it("WHEN rolling up status THEN feature aggregates from stories", async () => {
       // Given - stories have mixed status
       const statusMap: Record<string, string> = {
-        "/specs/capability-21_test": "OPEN",
-        "/specs/capability-21_test/feature-32_feat": "OPEN",
-        "/specs/capability-21_test/feature-32_feat/story-21_story1": "DONE",
-        "/specs/capability-21_test/feature-32_feat/story-32_story2": "OPEN",
+        "/specs/capability-21_test": WORK_ITEM_STATUSES[0],
+        "/specs/capability-21_test/feature-32_feat": WORK_ITEM_STATUSES[0],
+        "/specs/capability-21_test/feature-32_feat/story-21_story1": WORK_ITEM_STATUSES[2],
+        "/specs/capability-21_test/feature-32_feat/story-32_story2": WORK_ITEM_STATUSES[0],
       };
 
       const testDeps: TreeBuildDeps = {
-        getStatus: async (path) => statusMap[path] || "OPEN",
+        getStatus: async (path) => statusMap[path] || WORK_ITEM_STATUSES[0],
       };
 
       const workItems: WorkItem[] = [
         createWorkItemWithPath(
-          "capability",
+          WORK_ITEM_KINDS[0],
           20,
           "test",
-          "/specs/capability-21_test"
+          "/specs/capability-21_test",
         ),
         createWorkItemWithPath(
-          "feature",
+          WORK_ITEM_KINDS[1],
           32,
           "feat",
-          "/specs/capability-21_test/feature-32_feat"
+          "/specs/capability-21_test/feature-32_feat",
         ),
         createWorkItemWithPath(
-          "story",
+          WORK_ITEM_KINDS[2],
           21,
           "story1",
-          "/specs/capability-21_test/feature-32_feat/story-21_story1"
+          "/specs/capability-21_test/feature-32_feat/story-21_story1",
         ),
         createWorkItemWithPath(
-          "story",
+          WORK_ITEM_KINDS[2],
           32,
           "story2",
-          "/specs/capability-21_test/feature-32_feat/story-32_story2"
+          "/specs/capability-21_test/feature-32_feat/story-32_story2",
         ),
       ];
 
@@ -233,9 +233,9 @@ describe("buildTree - Status Rollup", () => {
       const tree = await buildTree(workItems, testDeps);
 
       // Then - feature should be IN_PROGRESS (stories mixed DONE/OPEN)
-      expect(tree.nodes[0].children[0].status).toBe("IN_PROGRESS");
+      expect(tree.nodes[0].children[0].status).toBe(WORK_ITEM_STATUSES[1]);
       // And capability should also be IN_PROGRESS (feature IN_PROGRESS)
-      expect(tree.nodes[0].status).toBe("IN_PROGRESS");
+      expect(tree.nodes[0].status).toBe(WORK_ITEM_STATUSES[1]);
     });
   });
 });

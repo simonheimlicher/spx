@@ -5,11 +5,12 @@
  *
  * @see story-43_e2e-validation.story.md
  */
-import { describe, it, expect, afterEach } from "vitest";
+import { WORK_ITEM_KINDS } from "@/types";
+import { generateFixtureTree, PRESETS } from "@test/helpers/fixture-generator";
+import { type MaterializedFixture, materializeFixture } from "@test/helpers/fixture-writer";
 import { execa } from "execa";
 import { resolve } from "node:path";
-import { PRESETS, generateFixtureTree } from "@test/helpers/fixture-generator";
-import { materializeFixture, type MaterializedFixture } from "@test/helpers/fixture-writer";
+import { afterEach, describe, expect, it } from "vitest";
 
 // Path to CLI binary (relative to project root)
 const CLI_PATH = resolve(process.cwd(), "bin/spx.js");
@@ -46,7 +47,7 @@ describe("E2E: Output Formats", () => {
       const { stdout, exitCode } = await execa(
         "node",
         [CLI_PATH, "status", "--json"],
-        { cwd: fixture.path }
+        { cwd: fixture.path },
       );
 
       expect(exitCode).toBe(0);
@@ -67,7 +68,7 @@ describe("E2E: Output Formats", () => {
       const { stdout, exitCode } = await execa(
         "node",
         [CLI_PATH, "status", "--format", "markdown"],
-        { cwd: fixture.path }
+        { cwd: fixture.path },
       );
 
       expect(exitCode).toBe(0);
@@ -82,7 +83,7 @@ describe("E2E: Output Formats", () => {
       const { stdout, exitCode } = await execa(
         "node",
         [CLI_PATH, "status", "--format", "table"],
-        { cwd: fixture.path }
+        { cwd: fixture.path },
       );
 
       expect(exitCode).toBe(0);
@@ -100,11 +101,10 @@ describe("E2E: Output Formats", () => {
       const { stdout: jsonOut } = await execa(
         "node",
         [CLI_PATH, "status", "--json"],
-        { cwd: fixture.path }
+        { cwd: fixture.path },
       );
       const jsonData = JSON.parse(jsonOut);
-      const itemCount =
-        jsonData.summary.done + jsonData.summary.inProgress + jsonData.summary.open;
+      const itemCount = jsonData.summary.done + jsonData.summary.inProgress + jsonData.summary.open;
 
       // Summary counts capabilities + features only (NOT stories)
       // FAN_10_LEVEL_3: 1 cap + 3 feats = 4 items
@@ -144,7 +144,7 @@ describe("E2E: Output Formats", () => {
       expect(result.capabilities.length).toBeGreaterThan(0);
 
       const cap = result.capabilities[0];
-      expect(cap).toHaveProperty("kind", "capability");
+      expect(cap).toHaveProperty("kind", WORK_ITEM_KINDS[0]);
       expect(cap).toHaveProperty("number");
       expect(cap).toHaveProperty("slug");
       expect(cap).toHaveProperty("status");
@@ -167,13 +167,13 @@ describe("E2E: Output Formats", () => {
 
       // First feature
       const feat = cap.features[0];
-      expect(feat).toHaveProperty("kind", "feature");
+      expect(feat).toHaveProperty("kind", WORK_ITEM_KINDS[1]);
       expect(feat.stories).toBeInstanceOf(Array);
 
       // Feature should have stories
       const story = feat.stories[0];
       expect(story).toBeDefined();
-      expect(story).toHaveProperty("kind", "story");
+      expect(story).toHaveProperty("kind", WORK_ITEM_KINDS[2]);
       expect(story).toHaveProperty("status");
     });
   });

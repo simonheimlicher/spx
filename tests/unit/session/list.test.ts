@@ -12,6 +12,7 @@ import { describe, expect, it } from "vitest";
 
 import { parseSessionMetadata, sortSessions } from "@/session/list";
 import { DEFAULT_PRIORITY, type Session, type SessionPriority } from "@/session/types";
+import { WORK_ITEM_KINDS } from "@/types";
 
 /**
  * Factory function to create test sessions.
@@ -208,7 +209,7 @@ files:
     // Then: All fields extracted
     expect(result.id).toBe("2026-01-13_10-00-00");
     expect(result.priority).toBe("high");
-    expect(result.tags).toEqual(["feature", "cli"]);
+    expect(result.tags).toEqual([WORK_ITEM_KINDS[1], "cli"]);
     expect(result.branch).toBe("feature/session");
     expect(result.createdAt).toBe("2026-01-13T10:00:00-08:00");
     expect(result.workingDirectory).toBe("/path/to/project");

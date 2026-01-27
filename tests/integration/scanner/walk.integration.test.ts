@@ -2,10 +2,11 @@
  * Level 2: Integration tests for recursive directory walking
  * Story: story-21_recursive-walk
  */
-import { describe, it, expect } from "vitest";
 import { walkDirectory } from "@/scanner/walk";
+import { WORK_ITEM_KINDS } from "@/types";
 import path from "path";
 import { fileURLToPath } from "url";
+import { describe, expect, it } from "vitest";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -94,9 +95,9 @@ describe("walkDirectory - Edge Cases", () => {
 
     // Then: Finds all levels
     expect(entries.length).toBeGreaterThan(0);
-    const hasCapability = entries.some(e => e.name.includes("capability"));
-    const hasFeature = entries.some(e => e.name.includes("feature"));
-    const hasStory = entries.some(e => e.name.includes("story"));
+    const hasCapability = entries.some(e => e.name.includes(WORK_ITEM_KINDS[0]));
+    const hasFeature = entries.some(e => e.name.includes(WORK_ITEM_KINDS[1]));
+    const hasStory = entries.some(e => e.name.includes(WORK_ITEM_KINDS[2]));
 
     expect(hasCapability).toBe(true);
     expect(hasFeature).toBe(true);

@@ -2,9 +2,10 @@
  * Level 1: Unit tests for building work item lists
  * Story: story-43_build-work-item-list
  */
-import { describe, it, expect } from "vitest";
 import { buildWorkItemList } from "@/scanner/walk";
+import { WORK_ITEM_KINDS } from "@/types";
 import type { DirectoryEntry } from "@/types";
+import { describe, expect, it } from "vitest";
 
 describe("buildWorkItemList", () => {
   /**
@@ -24,7 +25,7 @@ describe("buildWorkItemList", () => {
     // Then
     expect(workItems).toHaveLength(1);
     expect(workItems[0]).toEqual({
-      kind: "capability",
+      kind: WORK_ITEM_KINDS[0],
       number: 20,
       slug: "core-cli",
       path: "/specs/capability-21_core-cli",
@@ -44,9 +45,9 @@ describe("buildWorkItemList", () => {
 
     // Then
     expect(workItems).toHaveLength(3);
-    expect(workItems[0].kind).toBe("capability");
-    expect(workItems[1].kind).toBe("feature");
-    expect(workItems[2].kind).toBe("story");
+    expect(workItems[0].kind).toBe(WORK_ITEM_KINDS[0]);
+    expect(workItems[1].kind).toBe(WORK_ITEM_KINDS[1]);
+    expect(workItems[2].kind).toBe(WORK_ITEM_KINDS[2]);
   });
 
   it("GIVEN invalid directory entry WHEN building list THEN throws error", () => {

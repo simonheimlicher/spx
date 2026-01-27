@@ -1,15 +1,15 @@
-import { describe, it, expect } from "vitest";
 import { buildTree, type TreeBuildDeps } from "@/tree/build";
-import type { WorkItem } from "@/types";
+import { WORK_ITEM_KINDS, WORK_ITEM_STATUSES, type WorkItem } from "@/types";
+import { describe, expect, it } from "vitest";
 
 /**
  * Helper to create WorkItem with path
  */
 function createWorkItemWithPath(
-  kind: "capability" | "feature" | "story",
+  kind: (typeof WORK_ITEM_KINDS)[number],
   number: number,
   slug: string,
-  path: string
+  path: string,
 ): WorkItem {
   return {
     kind,
@@ -23,7 +23,7 @@ function createWorkItemWithPath(
  * Test dependency: simple status resolver
  */
 const testDeps: TreeBuildDeps = {
-  getStatus: async () => "OPEN",
+  getStatus: async () => WORK_ITEM_STATUSES[0],
 };
 
 describe("buildTree - BSP Sorting", () => {
@@ -32,28 +32,28 @@ describe("buildTree - BSP Sorting", () => {
       // Given - features out of order: 65, 32, 43
       const workItems: WorkItem[] = [
         createWorkItemWithPath(
-          "capability",
+          WORK_ITEM_KINDS[0],
           20,
           "test",
-          "/specs/capability-21_test"
+          "/specs/capability-21_test",
         ),
         createWorkItemWithPath(
-          "feature",
+          WORK_ITEM_KINDS[1],
           65,
           "feat3",
-          "/specs/capability-21_test/feature-65_feat3"
+          "/specs/capability-21_test/feature-65_feat3",
         ),
         createWorkItemWithPath(
-          "feature",
+          WORK_ITEM_KINDS[1],
           32,
           "feat1",
-          "/specs/capability-21_test/feature-32_feat1"
+          "/specs/capability-21_test/feature-32_feat1",
         ),
         createWorkItemWithPath(
-          "feature",
+          WORK_ITEM_KINDS[1],
           43,
           "feat2",
-          "/specs/capability-21_test/feature-43_feat2"
+          "/specs/capability-21_test/feature-43_feat2",
         ),
       ];
 
@@ -72,34 +72,34 @@ describe("buildTree - BSP Sorting", () => {
       // Given - stories out of order: 54, 21, 43
       const workItems: WorkItem[] = [
         createWorkItemWithPath(
-          "capability",
+          WORK_ITEM_KINDS[0],
           20,
           "test",
-          "/specs/capability-21_test"
+          "/specs/capability-21_test",
         ),
         createWorkItemWithPath(
-          "feature",
+          WORK_ITEM_KINDS[1],
           32,
           "feat",
-          "/specs/capability-21_test/feature-32_feat"
+          "/specs/capability-21_test/feature-32_feat",
         ),
         createWorkItemWithPath(
-          "story",
+          WORK_ITEM_KINDS[2],
           54,
           "story3",
-          "/specs/capability-21_test/feature-32_feat/story-54_story3"
+          "/specs/capability-21_test/feature-32_feat/story-54_story3",
         ),
         createWorkItemWithPath(
-          "story",
+          WORK_ITEM_KINDS[2],
           21,
           "story1",
-          "/specs/capability-21_test/feature-32_feat/story-21_story1"
+          "/specs/capability-21_test/feature-32_feat/story-21_story1",
         ),
         createWorkItemWithPath(
-          "story",
+          WORK_ITEM_KINDS[2],
           43,
           "story2",
-          "/specs/capability-21_test/feature-32_feat/story-43_story2"
+          "/specs/capability-21_test/feature-32_feat/story-43_story2",
         ),
       ];
 
@@ -117,22 +117,22 @@ describe("buildTree - BSP Sorting", () => {
       // Given - capabilities out of order: 31, 20, 42
       const workItems: WorkItem[] = [
         createWorkItemWithPath(
-          "capability",
+          WORK_ITEM_KINDS[0],
           31,
           "cap2",
-          "/specs/capability-32_cap2"
+          "/specs/capability-32_cap2",
         ),
         createWorkItemWithPath(
-          "capability",
+          WORK_ITEM_KINDS[0],
           20,
           "cap1",
-          "/specs/capability-21_cap1"
+          "/specs/capability-21_cap1",
         ),
         createWorkItemWithPath(
-          "capability",
+          WORK_ITEM_KINDS[0],
           42,
           "cap3",
-          "/specs/capability-43_cap3"
+          "/specs/capability-43_cap3",
         ),
       ];
 

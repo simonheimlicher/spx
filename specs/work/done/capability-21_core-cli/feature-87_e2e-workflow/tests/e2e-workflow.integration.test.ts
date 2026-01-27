@@ -6,20 +6,12 @@
  *
  * Tests at Level 2+3: Real filesystem + CLI execution.
  */
-import { describe, it, expect, afterEach } from "vitest";
+import { WORK_ITEM_STATUSES } from "@/types";
+import { countNodes, type FixtureConfig, generateFixtureTree, PRESETS } from "@test/helpers/fixture-generator";
+import { createFixture, type MaterializedFixture, materializeFixture } from "@test/helpers/fixture-writer";
 import { execa } from "execa";
 import { resolve } from "node:path";
-import {
-  generateFixtureTree,
-  PRESETS,
-  countNodes,
-  type FixtureConfig,
-} from "@test/helpers/fixture-generator";
-import {
-  materializeFixture,
-  createFixture,
-  type MaterializedFixture,
-} from "@test/helpers/fixture-writer";
+import { afterEach, describe, expect, it } from "vitest";
 
 // Path to CLI binary (relative to project root)
 const CLI_PATH = resolve(process.cwd(), "bin/spx.js");
@@ -48,7 +40,7 @@ describe("Feature 87: E2E Workflow Integration", () => {
       const { stdout, exitCode } = await execa(
         "node",
         [CLI_PATH, "status", "--json"],
-        { cwd: fixture.path }
+        { cwd: fixture.path },
       );
 
       expect(exitCode).toBe(0);
@@ -66,7 +58,7 @@ describe("Feature 87: E2E Workflow Integration", () => {
         const { stdout, exitCode } = await execa(
           "node",
           [CLI_PATH, "status", "--json"],
-          { cwd: fixture.path }
+          { cwd: fixture.path },
         );
 
         expect(exitCode).toBe(0);
@@ -89,7 +81,7 @@ describe("Feature 87: E2E Workflow Integration", () => {
       const { stdout, exitCode } = await execa(
         "node",
         [CLI_PATH, "status", "--json"],
-        { cwd: fixture.path }
+        { cwd: fixture.path },
       );
 
       expect(exitCode).toBe(0);
@@ -111,7 +103,7 @@ describe("Feature 87: E2E Workflow Integration", () => {
       const { exitCode } = await execa(
         "node",
         [CLI_PATH, "status", "--json"],
-        { cwd: fixture.path }
+        { cwd: fixture.path },
       );
       const elapsed = Date.now() - startTime;
 
@@ -128,7 +120,7 @@ describe("Feature 87: E2E Workflow Integration", () => {
       const { stdout: out1 } = await execa(
         "node",
         [CLI_PATH, "status", "--json"],
-        { cwd: fixture.path }
+        { cwd: fixture.path },
       );
       const result1 = JSON.parse(out1);
       await fixture.cleanup();
@@ -139,7 +131,7 @@ describe("Feature 87: E2E Workflow Integration", () => {
       const { stdout: out2 } = await execa(
         "node",
         [CLI_PATH, "status", "--json"],
-        { cwd: fixture.path }
+        { cwd: fixture.path },
       );
       const result2 = JSON.parse(out2);
 
@@ -162,7 +154,7 @@ describe("Feature 87: E2E Workflow Integration", () => {
       const { stdout } = await execa(
         "node",
         [CLI_PATH, "status", "--json"],
-        { cwd: fixture.path }
+        { cwd: fixture.path },
       );
       const result = JSON.parse(stdout);
 
@@ -170,7 +162,7 @@ describe("Feature 87: E2E Workflow Integration", () => {
       for (const cap of result.capabilities) {
         for (const feat of cap.features) {
           for (const story of feat.stories) {
-            expect(story.status).toBe("DONE");
+            expect(story.status).toBe(WORK_ITEM_STATUSES[2]);
           }
         }
       }
@@ -193,7 +185,7 @@ describe("Feature 87: E2E Workflow Integration", () => {
       const { stdout } = await execa(
         "node",
         [CLI_PATH, "status", "--json"],
-        { cwd: fixture.path }
+        { cwd: fixture.path },
       );
       const result = JSON.parse(stdout);
 
@@ -201,7 +193,7 @@ describe("Feature 87: E2E Workflow Integration", () => {
       for (const cap of result.capabilities) {
         for (const feat of cap.features) {
           for (const story of feat.stories) {
-            expect(story.status).toBe("OPEN");
+            expect(story.status).toBe(WORK_ITEM_STATUSES[0]);
           }
         }
       }

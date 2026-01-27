@@ -5,15 +5,16 @@
  *
  * @see story-21_fixture-generator.story.md
  */
-import { describe, it, expect } from "vitest";
+import { WORK_ITEM_KINDS, WORK_ITEM_STATUSES } from "@/types";
 import {
-  generateFixtureTree,
-  countNodes,
   collectStatuses,
-  PRESETS,
+  countNodes,
   type FixtureConfig,
   type FixtureNode,
+  generateFixtureTree,
+  PRESETS,
 } from "@test/helpers/fixture-generator";
+import { describe, expect, it } from "vitest";
 
 describe("generateFixtureTree", () => {
   describe("FR1: Tree Generation", () => {
@@ -50,10 +51,10 @@ describe("generateFixtureTree", () => {
       // Verify 3-level hierarchy
       expect(tree.nodes).toHaveLength(1);
       const cap = tree.nodes[0];
-      const features = cap.children.filter((c) => c.kind === "feature");
+      const features = cap.children.filter((c) => c.kind === WORK_ITEM_KINDS[1]);
       expect(features).toHaveLength(3);
       for (const feat of features) {
-        expect(feat.children.filter((c) => c.kind === "story")).toHaveLength(2);
+        expect(feat.children.filter((c) => c.kind === WORK_ITEM_KINDS[2])).toHaveLength(2);
       }
     });
   });
@@ -73,7 +74,7 @@ describe("generateFixtureTree", () => {
 
       for (const cap of tree.nodes) {
         for (const child of cap.children) {
-          if (child.kind === "feature") {
+          if (child.kind === WORK_ITEM_KINDS[1]) {
             expect(child.number).toBeGreaterThanOrEqual(10);
             expect(child.number).toBeLessThanOrEqual(99);
           }
@@ -85,8 +86,8 @@ describe("generateFixtureTree", () => {
       const tree = generateFixtureTree(PRESETS.SHALLOW_50);
 
       for (const cap of tree.nodes) {
-        for (const feat of cap.children.filter((c) => c.kind === "feature")) {
-          for (const story of feat.children.filter((c) => c.kind === "story")) {
+        for (const feat of cap.children.filter((c) => c.kind === WORK_ITEM_KINDS[1])) {
+          for (const story of feat.children.filter((c) => c.kind === WORK_ITEM_KINDS[2])) {
             expect(story.number).toBeGreaterThanOrEqual(10);
             expect(story.number).toBeLessThanOrEqual(99);
           }
@@ -100,7 +101,7 @@ describe("generateFixtureTree", () => {
       // With 5 features per capability, numbers should be spaced roughly 15-18 apart
       const cap = tree.nodes[0];
       const featNumbers = cap.children
-        .filter((c) => c.kind === "feature")
+        .filter((c) => c.kind === WORK_ITEM_KINDS[1])
         .map((f) => f.number)
         .sort((a, b) => a - b);
 
@@ -162,7 +163,7 @@ describe("generateFixtureTree", () => {
       // Check that all story statuses are OPEN
       const stories = getAllStories(tree);
       for (const story of stories) {
-        expect(story.status).toBe("OPEN");
+        expect(story.status).toBe(WORK_ITEM_STATUSES[0]);
       }
     });
 
@@ -177,8 +178,8 @@ describe("generateFixtureTree", () => {
       const stories = getAllStories(tree);
       const total = stories.length;
 
-      const done = stories.filter((s) => s.status === "DONE").length;
-      const inProgress = stories.filter((s) => s.status === "IN_PROGRESS").length;
+      const done = stories.filter((s) => s.status === WORK_ITEM_STATUSES[2]).length;
+      const inProgress = stories.filter((s) => s.status === WORK_ITEM_STATUSES[1]).length;
 
       // Allow 25% variance due to randomness
       expect(done / total).toBeGreaterThan(0.25);
@@ -229,10 +230,10 @@ describe("generateFixtureTree", () => {
 
       const tree = generateFixtureTree(config);
       const cap = tree.nodes[0];
-      const feat = cap.children.find((c) => c.kind === "feature");
+      const feat = cap.children.find((c) => c.kind === WORK_ITEM_KINDS[1]);
 
-      expect(feat?.status).toBe("DONE");
-      expect(cap.status).toBe("DONE");
+      expect(feat?.status).toBe(WORK_ITEM_STATUSES[2]);
+      expect(cap.status).toBe(WORK_ITEM_STATUSES[2]);
     });
 
     it("GIVEN all OPEN children WHEN generating THEN parent is OPEN", () => {
@@ -245,7 +246,7 @@ describe("generateFixtureTree", () => {
       const tree = generateFixtureTree(config);
       const cap = tree.nodes[0];
 
-      expect(cap.status).toBe("OPEN");
+      expect(cap.status).toBe(WORK_ITEM_STATUSES[0]);
     });
 
     it("GIVEN mixed children WHEN generating THEN parent is IN_PROGRESS", () => {
@@ -258,13 +259,12 @@ describe("generateFixtureTree", () => {
 
       const tree = generateFixtureTree(config);
       const cap = tree.nodes[0];
-      const features = cap.children.filter((c) => c.kind === "feature");
+      const features = cap.children.filter((c) => c.kind === WORK_ITEM_KINDS[1]);
 
       // At least one feature should have mixed children -> IN_PROGRESS
       // or the capability itself should be IN_PROGRESS due to mixed features
-      const hasInProgress =
-        cap.status === "IN_PROGRESS" ||
-        features.some((f) => f.status === "IN_PROGRESS");
+      const hasInProgress = cap.status === WORK_ITEM_STATUSES[1]
+        || features.some((f) => f.status === WORK_ITEM_STATUSES[1]);
       expect(hasInProgress).toBe(true);
     });
   });
@@ -315,32 +315,28 @@ describe("PRESETS", () => {
   });
 
   it("SHALLOW_50 produces wide, shallow tree (>= 50 items)", () => {
-    const { capabilities: c, featuresPerCapability: f, storiesPerFeature: s } =
-      PRESETS.SHALLOW_50;
+    const { capabilities: c, featuresPerCapability: f, storiesPerFeature: s } = PRESETS.SHALLOW_50;
     const total = c + c * f + c * f * s;
     expect(total).toBeGreaterThanOrEqual(50);
   });
 
   it("DEEP_50 produces narrow, deep tree (>= 50 items)", () => {
-    const { capabilities: c, featuresPerCapability: f, storiesPerFeature: s } =
-      PRESETS.DEEP_50;
+    const { capabilities: c, featuresPerCapability: f, storiesPerFeature: s } = PRESETS.DEEP_50;
     const total = c + c * f + c * f * s;
     expect(total).toBeGreaterThanOrEqual(50);
   });
 
   it("FAN_10_LEVEL_3 produces 3-level hierarchy (>= 10 items)", () => {
-    const { capabilities: c, featuresPerCapability: f, storiesPerFeature: s } =
-      PRESETS.FAN_10_LEVEL_3;
+    const { capabilities: c, featuresPerCapability: f, storiesPerFeature: s } = PRESETS.FAN_10_LEVEL_3;
     const total = c + c * f + c * f * s;
     expect(total).toBeGreaterThanOrEqual(10);
   });
 
   it("All presets have valid status distributions summing to ~1.0", () => {
     for (const [_name, preset] of Object.entries(PRESETS)) {
-      const sum =
-        preset.statusDistribution.done +
-        preset.statusDistribution.inProgress +
-        preset.statusDistribution.open;
+      const sum = preset.statusDistribution.done
+        + preset.statusDistribution.inProgress
+        + preset.statusDistribution.open;
       expect(sum).toBeCloseTo(1.0, 1);
     }
   });
@@ -387,7 +383,7 @@ function countStories(tree: { nodes: FixtureNode[] }): number {
 
   function traverse(nodes: FixtureNode[]): void {
     for (const node of nodes) {
-      if (node.kind === "story") {
+      if (node.kind === WORK_ITEM_KINDS[2]) {
         count++;
       }
       traverse(node.children);
@@ -403,7 +399,7 @@ function getAllStories(tree: { nodes: FixtureNode[] }): FixtureNode[] {
 
   function traverse(nodes: FixtureNode[]): void {
     for (const node of nodes) {
-      if (node.kind === "story") {
+      if (node.kind === WORK_ITEM_KINDS[2]) {
         stories.push(node);
       }
       traverse(node.children);

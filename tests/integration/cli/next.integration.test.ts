@@ -2,6 +2,7 @@
  * Level 2: Integration tests for CLI next command
  * Story: story-32_next-command
  */
+import { WORK_ITEM_STATUSES } from "@/types";
 import { execa } from "execa";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -30,7 +31,7 @@ describe("spx spec next command", () => {
     expect(exitCode).toBe(0);
     expect(stdout).toContain("Next work item:");
     expect(stdout).toContain("story-21_first");
-    expect(stdout).toContain("IN_PROGRESS");
+    expect(stdout).toContain(WORK_ITEM_STATUSES[1]);
   });
 
   it("GIVEN repo with all DONE WHEN running next THEN shows completion message", async () => {

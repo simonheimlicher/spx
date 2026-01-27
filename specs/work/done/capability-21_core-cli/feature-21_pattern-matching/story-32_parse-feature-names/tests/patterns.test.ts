@@ -2,8 +2,9 @@
  * Level 1: Pure function tests for feature pattern matching
  * Story: story-32_parse-feature-names
  */
-import { describe, it, expect } from "vitest";
 import { parseWorkItemName } from "@/scanner/patterns";
+import { WORK_ITEM_KINDS } from "@/types";
+import { describe, expect, it } from "vitest";
 
 describe("parseWorkItemName - Features", () => {
   it("GIVEN valid feature name WHEN parsing THEN extracts kind, number, and slug", () => {
@@ -15,7 +16,7 @@ describe("parseWorkItemName - Features", () => {
 
     // Then
     expect(result).toEqual({
-      kind: "feature",
+      kind: WORK_ITEM_KINDS[1],
       number: 21,
       slug: "pattern-matching",
     });
@@ -42,8 +43,8 @@ describe("parseWorkItemName - Features", () => {
     const featResult = parseWorkItemName(featureName);
 
     // Then
-    expect(capResult.kind).toBe("capability");
-    expect(featResult.kind).toBe("feature");
+    expect(capResult.kind).toBe(WORK_ITEM_KINDS[0]);
+    expect(featResult.kind).toBe(WORK_ITEM_KINDS[1]);
     expect(capResult.number).toBe(featResult.number);
   });
 
@@ -60,8 +61,8 @@ describe("parseWorkItemName - Kind Detection", () => {
   it("GIVEN mixed work items WHEN parsing THEN correctly identifies each kind", () => {
     // Given
     const testCases = [
-      { input: "capability-21_test", expectedKind: "capability" },
-      { input: "feature-21_test", expectedKind: "feature" },
+      { input: "capability-21_test", expectedKind: WORK_ITEM_KINDS[0] },
+      { input: "feature-21_test", expectedKind: WORK_ITEM_KINDS[1] },
     ];
 
     // When/Then

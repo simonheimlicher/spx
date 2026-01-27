@@ -1,5 +1,6 @@
 import { DEFAULT_CONFIG } from "@/config/defaults";
 import { formatJSON } from "@/reporter/json";
+import { WORK_ITEM_KINDS } from "@/types";
 import { buildSimpleTree, buildTreeWithMixedStatus, buildTreeWithStories } from "@test/helpers/tree-builder";
 import { describe, expect, it } from "vitest";
 
@@ -45,7 +46,7 @@ describe("formatJSON", () => {
       const parsed = JSON.parse(output);
 
       expect(parsed.capabilities).toBeDefined();
-      expect(parsed.capabilities[0].kind).toBe("capability");
+      expect(parsed.capabilities[0].kind).toBe(WORK_ITEM_KINDS[0]);
       expect(parsed.capabilities[0].number).toBeDefined();
       expect(parsed.capabilities[0].slug).toBeDefined();
       expect(parsed.capabilities[0].features).toBeInstanceOf(Array);

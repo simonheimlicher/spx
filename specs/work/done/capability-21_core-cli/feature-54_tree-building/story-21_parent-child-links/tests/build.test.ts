@@ -1,15 +1,15 @@
-import { describe, it, expect } from "vitest";
 import { buildTree, type TreeBuildDeps } from "@/tree/build";
-import type { WorkItem } from "@/types";
+import { WORK_ITEM_KINDS, WORK_ITEM_STATUSES, type WorkItem } from "@/types";
+import { describe, expect, it } from "vitest";
 
 /**
  * Helper to create WorkItem with path
  */
 function createWorkItemWithPath(
-  kind: "capability" | "feature" | "story",
+  kind: (typeof WORK_ITEM_KINDS)[number],
   number: number,
   slug: string,
-  path: string
+  path: string,
 ): WorkItem {
   return {
     kind,
@@ -24,7 +24,7 @@ function createWorkItemWithPath(
  * (For Level 1 testing - pure functions without filesystem access)
  */
 const testDeps: TreeBuildDeps = {
-  getStatus: async () => "OPEN",
+  getStatus: async () => WORK_ITEM_STATUSES[0],
 };
 
 describe("buildTree - Parent-Child Links", () => {
@@ -33,16 +33,16 @@ describe("buildTree - Parent-Child Links", () => {
       // Given
       const workItems: WorkItem[] = [
         createWorkItemWithPath(
-          "capability",
+          WORK_ITEM_KINDS[0],
           20,
           "test",
-          "/specs/capability-21_test"
+          "/specs/capability-21_test",
         ),
         createWorkItemWithPath(
-          "feature",
+          WORK_ITEM_KINDS[1],
           32,
           "feat",
-          "/specs/capability-21_test/feature-32_feat"
+          "/specs/capability-21_test/feature-32_feat",
         ),
       ];
 
@@ -51,7 +51,7 @@ describe("buildTree - Parent-Child Links", () => {
 
       // Then
       expect(tree.nodes).toHaveLength(1);
-      expect(tree.nodes[0].kind).toBe("capability");
+      expect(tree.nodes[0].kind).toBe(WORK_ITEM_KINDS[0]);
       expect(tree.nodes[0].children).toHaveLength(1);
       expect(tree.nodes[0].children[0].slug).toBe("feat");
     });
@@ -62,22 +62,22 @@ describe("buildTree - Parent-Child Links", () => {
       // Given
       const workItems: WorkItem[] = [
         createWorkItemWithPath(
-          "capability",
+          WORK_ITEM_KINDS[0],
           20,
           "test",
-          "/specs/capability-21_test"
+          "/specs/capability-21_test",
         ),
         createWorkItemWithPath(
-          "feature",
+          WORK_ITEM_KINDS[1],
           32,
           "feat",
-          "/specs/capability-21_test/feature-32_feat"
+          "/specs/capability-21_test/feature-32_feat",
         ),
         createWorkItemWithPath(
-          "story",
+          WORK_ITEM_KINDS[2],
           21,
-          "story",
-          "/specs/capability-21_test/feature-32_feat/story-21_story"
+          "my-story",
+          "/specs/capability-21_test/feature-32_feat/story-21_my-story",
         ),
       ];
 
@@ -87,7 +87,7 @@ describe("buildTree - Parent-Child Links", () => {
       // Then
       const feature = tree.nodes[0].children[0];
       expect(feature.children).toHaveLength(1);
-      expect(feature.children[0].slug).toBe("story");
+      expect(feature.children[0].slug).toBe("my-story");
     });
   });
 
@@ -96,22 +96,22 @@ describe("buildTree - Parent-Child Links", () => {
       // Given
       const workItems: WorkItem[] = [
         createWorkItemWithPath(
-          "capability",
+          WORK_ITEM_KINDS[0],
           20,
           "test",
-          "/specs/capability-21_test"
+          "/specs/capability-21_test",
         ),
         createWorkItemWithPath(
-          "feature",
+          WORK_ITEM_KINDS[1],
           32,
           "feat1",
-          "/specs/capability-21_test/feature-32_feat1"
+          "/specs/capability-21_test/feature-32_feat1",
         ),
         createWorkItemWithPath(
-          "feature",
+          WORK_ITEM_KINDS[1],
           43,
           "feat2",
-          "/specs/capability-21_test/feature-43_feat2"
+          "/specs/capability-21_test/feature-43_feat2",
         ),
       ];
 
@@ -127,12 +127,12 @@ describe("buildTree - Parent-Child Links", () => {
     it("WHEN building tree THEN throws error", async () => {
       // Given: Story without parent feature
       const workItems: WorkItem[] = [
-        createWorkItemWithPath("story", 21, "orphan", "/specs/story-21_orphan"),
+        createWorkItemWithPath(WORK_ITEM_KINDS[2], 21, "orphan", "/specs/story-21_orphan"),
       ];
 
       // When/Then
       await expect(buildTree(workItems, testDeps)).rejects.toThrow(
-        /orphan|parent/i
+        /orphan|parent/i,
       );
     });
   });
@@ -142,16 +142,16 @@ describe("buildTree - Parent-Child Links", () => {
       // Given
       const workItems: WorkItem[] = [
         createWorkItemWithPath(
-          "capability",
+          WORK_ITEM_KINDS[0],
           20,
           "cap1",
-          "/specs/capability-21_cap1"
+          "/specs/capability-21_cap1",
         ),
         createWorkItemWithPath(
-          "capability",
+          WORK_ITEM_KINDS[0],
           31,
           "cap2",
-          "/specs/capability-32_cap2"
+          "/specs/capability-32_cap2",
         ),
       ];
 

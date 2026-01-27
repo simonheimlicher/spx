@@ -6,7 +6,7 @@
  */
 import type { TreeNode, WorkItemTree } from "@/tree/types";
 import type { WorkItemKind, WorkItemStatus } from "@/types";
-import { WORK_ITEM_KINDS } from "../fixtures/constants";
+import { WORK_ITEM_KINDS, WORK_ITEM_STATUSES } from "@/types";
 
 /**
  * Create a synthetic tree node
@@ -29,7 +29,7 @@ export function createNode(
     kind,
     number,
     slug,
-    path: `/test/${kind}-${kind === "capability" ? number + 1 : number}_${slug}`,
+    path: `/test/${kind}-${kind === WORK_ITEM_KINDS[0] ? number + 1 : number}_${slug}`,
     status,
     children: children.sort((a, b) => a.number - b.number), // BSP sort
   };
@@ -41,7 +41,7 @@ export function createNode(
  * Used by: text, markdown, table formatters
  */
 export function buildSimpleTree(): WorkItemTree {
-  const cap = createNode("capability", 20, "test", "DONE");
+  const cap = createNode(WORK_ITEM_KINDS[0], 20, "test", WORK_ITEM_STATUSES[2]);
   return { nodes: [cap] };
 }
 
@@ -56,9 +56,9 @@ export function buildSimpleTree(): WorkItemTree {
  * Used by: text, markdown formatters
  */
 export function buildTreeWithFeatures(): WorkItemTree {
-  const feat1 = createNode("feature", 21, "test", "DONE");
-  const feat2 = createNode("feature", 32, "test", "OPEN");
-  const cap = createNode("capability", 20, "test", "IN_PROGRESS", [
+  const feat1 = createNode(WORK_ITEM_KINDS[1], 21, "test", WORK_ITEM_STATUSES[2]);
+  const feat2 = createNode(WORK_ITEM_KINDS[1], 32, "test", WORK_ITEM_STATUSES[0]);
+  const cap = createNode(WORK_ITEM_KINDS[0], 20, "test", WORK_ITEM_STATUSES[1], [
     feat1,
     feat2,
   ]);
@@ -78,10 +78,10 @@ export function buildTreeWithFeatures(): WorkItemTree {
  * Used by: text, JSON, markdown, table formatters
  */
 export function buildTreeWithStories(): WorkItemTree {
-  const story1 = createNode("story", 21, "test", "DONE");
-  const story2 = createNode("story", 32, "test", "DONE");
-  const feat = createNode("feature", 21, "test", "DONE", [story1, story2]);
-  const cap = createNode("capability", 20, "test", "DONE", [feat]);
+  const story1 = createNode(WORK_ITEM_KINDS[2], 21, "test", WORK_ITEM_STATUSES[2]);
+  const story2 = createNode(WORK_ITEM_KINDS[2], 32, "test", WORK_ITEM_STATUSES[2]);
+  const feat = createNode(WORK_ITEM_KINDS[1], 21, "test", WORK_ITEM_STATUSES[2], [story1, story2]);
+  const cap = createNode(WORK_ITEM_KINDS[0], 20, "test", WORK_ITEM_STATUSES[2], [feat]);
 
   return { nodes: [cap] };
 }
@@ -100,17 +100,17 @@ export function buildTreeWithStories(): WorkItemTree {
  * Used by: text, markdown formatters (status display)
  */
 export function buildTreeWithStatus(): WorkItemTree {
-  const doneStory = createNode("story", 21, "done", "DONE");
-  const doneFeat = createNode("feature", 21, "test", "DONE", [doneStory]);
+  const doneStory = createNode(WORK_ITEM_KINDS[2], 21, "done", WORK_ITEM_STATUSES[2]);
+  const doneFeat = createNode(WORK_ITEM_KINDS[1], 21, "test", WORK_ITEM_STATUSES[2], [doneStory]);
 
-  const progressStory = createNode("story", 32, "progress", "IN_PROGRESS");
-  const openStory = createNode("story", 43, "open", "OPEN");
-  const mixedFeat = createNode("feature", 32, "test", "IN_PROGRESS", [
+  const progressStory = createNode(WORK_ITEM_KINDS[2], 32, "progress", WORK_ITEM_STATUSES[1]);
+  const openStory = createNode(WORK_ITEM_KINDS[2], 43, "open", WORK_ITEM_STATUSES[0]);
+  const mixedFeat = createNode(WORK_ITEM_KINDS[1], 32, "test", WORK_ITEM_STATUSES[1], [
     progressStory,
     openStory,
   ]);
 
-  const cap = createNode("capability", 20, "test", "IN_PROGRESS", [
+  const cap = createNode(WORK_ITEM_KINDS[0], 20, "test", WORK_ITEM_STATUSES[1], [
     doneFeat,
     mixedFeat,
   ]);
@@ -133,18 +133,18 @@ export function buildTreeWithStatus(): WorkItemTree {
  * Used by: JSON formatter (summary: { done: 2, inProgress: 2, open: 2 })
  */
 export function buildTreeWithMixedStatus(): WorkItemTree {
-  const doneStory = createNode("story", 21, "done", "DONE");
-  const doneFeat = createNode("feature", 21, "done", "DONE", [doneStory]);
+  const doneStory = createNode(WORK_ITEM_KINDS[2], 21, "done", WORK_ITEM_STATUSES[2]);
+  const doneFeat = createNode(WORK_ITEM_KINDS[1], 21, "done", WORK_ITEM_STATUSES[2], [doneStory]);
 
-  const progressStory = createNode("story", 32, "progress", "IN_PROGRESS");
-  const progressFeat = createNode("feature", 32, "progress", "IN_PROGRESS", [
+  const progressStory = createNode(WORK_ITEM_KINDS[2], 32, "progress", WORK_ITEM_STATUSES[1]);
+  const progressFeat = createNode(WORK_ITEM_KINDS[1], 32, "progress", WORK_ITEM_STATUSES[1], [
     progressStory,
   ]);
 
-  const openStory = createNode("story", 43, "open", "OPEN");
-  const openFeat = createNode("feature", 43, "open", "OPEN", [openStory]);
+  const openStory = createNode(WORK_ITEM_KINDS[2], 43, "open", WORK_ITEM_STATUSES[0]);
+  const openFeat = createNode(WORK_ITEM_KINDS[1], 43, "open", WORK_ITEM_STATUSES[0], [openStory]);
 
-  const cap = createNode("capability", 20, "test", "IN_PROGRESS", [
+  const cap = createNode(WORK_ITEM_KINDS[0], 20, "test", WORK_ITEM_STATUSES[1], [
     doneFeat,
     progressFeat,
     openFeat,
@@ -160,7 +160,7 @@ export function buildTreeWithMixedStatus(): WorkItemTree {
  * Returns both the root node and the leaf node for assertions.
  *
  * @param bspNumbers - Array of BSP numbers, one per hierarchy level
- * @param status - Status for the leaf node (default: "OPEN")
+ * @param status - Status for the leaf node (default: WORK_ITEM_STATUSES[0])
  * @returns Object with root and leaf nodes
  * @throws Error if bspNumbers length doesn't match WORK_ITEM_KINDS length
  *
@@ -168,12 +168,12 @@ export function buildTreeWithMixedStatus(): WorkItemTree {
  * ```typescript
  * // Build path: capability-10 > feature-20 > story-30
  * const { root, leaf } = buildTreePath([10, 20, 30]);
- * expect(leaf.kind).toBe("story");
+ * expect(leaf.kind).toBe(WORK_ITEM_KINDS[2]);
  * ```
  */
 export function buildTreePath(
   bspNumbers: number[],
-  status: WorkItemStatus = "OPEN",
+  status: WorkItemStatus = WORK_ITEM_STATUSES[0],
 ): { root: TreeNode; leaf: TreeNode } {
   if (bspNumbers.length !== WORK_ITEM_KINDS.length) {
     throw new Error(
@@ -187,7 +187,7 @@ export function buildTreePath(
     const kind = WORK_ITEM_KINDS[i];
     const num = bspNumbers[i];
     // Only leaf gets the specified status, parents are IN_PROGRESS
-    const nodeStatus = i === WORK_ITEM_KINDS.length - 1 ? status : "IN_PROGRESS";
+    const nodeStatus = i === WORK_ITEM_KINDS.length - 1 ? status : WORK_ITEM_STATUSES[1];
     node = createNode(kind, num, `${kind[0]}${num}`, nodeStatus, node ? [node] : []);
   }
 

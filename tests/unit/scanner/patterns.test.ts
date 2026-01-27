@@ -2,8 +2,9 @@
  * Level 1: Pure function tests for pattern matching
  * Stories: story-21_parse-capability-names, story-32_parse-feature-names, story-43_parse-story-names
  */
-import { describe, it, expect } from "vitest";
 import { parseWorkItemName } from "@/scanner/patterns";
+import { WORK_ITEM_KINDS } from "@/types";
+import { describe, expect, it } from "vitest";
 
 describe("parseWorkItemName - Capabilities", () => {
   it("GIVEN valid capability name WHEN parsing THEN extracts kind, number, and slug", () => {
@@ -15,7 +16,7 @@ describe("parseWorkItemName - Capabilities", () => {
 
     // Then
     expect(result).toEqual({
-      kind: "capability",
+      kind: WORK_ITEM_KINDS[0],
       number: 20,
       slug: "core-cli",
     });
@@ -67,7 +68,7 @@ describe("parseWorkItemName - Features", () => {
 
     // Then
     expect(result).toEqual({
-      kind: "feature",
+      kind: WORK_ITEM_KINDS[1],
       number: 21,
       slug: "pattern-matching",
     });
@@ -94,8 +95,8 @@ describe("parseWorkItemName - Features", () => {
     const featResult = parseWorkItemName(featureName);
 
     // Then
-    expect(capResult.kind).toBe("capability");
-    expect(featResult.kind).toBe("feature");
+    expect(capResult.kind).toBe(WORK_ITEM_KINDS[0]);
+    expect(featResult.kind).toBe(WORK_ITEM_KINDS[1]);
     expect(capResult.number).toBe(featResult.number);
   });
 
@@ -112,8 +113,8 @@ describe("parseWorkItemName - Kind Detection", () => {
   it("GIVEN mixed work items WHEN parsing THEN correctly identifies each kind", () => {
     // Given
     const testCases = [
-      { input: "capability-21_test", expectedKind: "capability" },
-      { input: "feature-21_test", expectedKind: "feature" },
+      { input: "capability-21_test", expectedKind: WORK_ITEM_KINDS[0] },
+      { input: "feature-21_test", expectedKind: WORK_ITEM_KINDS[1] },
     ];
 
     // When/Then
@@ -134,7 +135,7 @@ describe("parseWorkItemName - Stories", () => {
 
     // Then
     expect(result).toEqual({
-      kind: "story",
+      kind: WORK_ITEM_KINDS[2],
       number: 21,
       slug: "parse-capability-names",
     });
@@ -164,9 +165,9 @@ describe("parseWorkItemName - Complete Pattern Coverage", () => {
   it("GIVEN all three kinds WHEN parsing THEN returns consistent structure", () => {
     // Given
     const testCases = [
-      { input: "capability-21_core-cli", expectedKind: "capability" },
-      { input: "feature-21_pattern-matching", expectedKind: "feature" },
-      { input: "story-32_parse-features", expectedKind: "story" },
+      { input: "capability-21_core-cli", expectedKind: WORK_ITEM_KINDS[0] },
+      { input: "feature-21_pattern-matching", expectedKind: WORK_ITEM_KINDS[1] },
+      { input: "story-32_parse-features", expectedKind: WORK_ITEM_KINDS[2] },
     ];
 
     // When/Then
@@ -193,9 +194,9 @@ describe("parseWorkItemName - Complete Pattern Coverage", () => {
     const storyResult = parseWorkItemName(story);
 
     // Then
-    expect(capResult.kind).toBe("capability");
-    expect(featResult.kind).toBe("feature");
-    expect(storyResult.kind).toBe("story");
+    expect(capResult.kind).toBe(WORK_ITEM_KINDS[0]);
+    expect(featResult.kind).toBe(WORK_ITEM_KINDS[1]);
+    expect(storyResult.kind).toBe(WORK_ITEM_KINDS[2]);
     expect(capResult.number).toBe(50);
     expect(featResult.number).toBe(50);
     expect(storyResult.number).toBe(50);
@@ -233,7 +234,7 @@ describe("parseWorkItemName - Edge Cases", () => {
     const result = parseWorkItemName(dirName);
 
     // Then
-    expect(result.kind).toBe("capability");
+    expect(result.kind).toBe(WORK_ITEM_KINDS[0]);
   });
 });
 

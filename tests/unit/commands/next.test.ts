@@ -4,8 +4,8 @@
  */
 import { findNextWorkItem } from "@/commands/spec/next";
 import type { WorkItemTree } from "@/tree/types";
+import { WORK_ITEM_KINDS, WORK_ITEM_STATUSES } from "@/types";
 import { describe, expect, it } from "vitest";
-import { WORK_ITEM_KINDS } from "../../fixtures/constants";
 import { buildTreePath, createNode } from "../../helpers/tree-builder";
 
 describe("findNextWorkItem", () => {
@@ -15,13 +15,13 @@ describe("findNextWorkItem", () => {
 
   it("GIVEN IN_PROGRESS and OPEN items WHEN finding next THEN returns lowest BSP regardless of status", () => {
     // Given: Tree with IN_PROGRESS story-32 and OPEN story-21
-    const inProgressStory = createNode("story", 32, "in-progress", "IN_PROGRESS");
-    const openStory = createNode("story", 21, "open", "OPEN");
-    const feat = createNode("feature", 21, "test", "IN_PROGRESS", [
+    const inProgressStory = createNode(WORK_ITEM_KINDS[2], 32, "in-progress", WORK_ITEM_STATUSES[1]);
+    const openStory = createNode(WORK_ITEM_KINDS[2], 21, "open", WORK_ITEM_STATUSES[0]);
+    const feat = createNode(WORK_ITEM_KINDS[1], 21, "test", WORK_ITEM_STATUSES[1], [
       openStory,
       inProgressStory,
     ]);
-    const cap = createNode("capability", 20, "test", "IN_PROGRESS", [feat]);
+    const cap = createNode(WORK_ITEM_KINDS[0], 20, "test", WORK_ITEM_STATUSES[1], [feat]);
     const tree: WorkItemTree = { nodes: [cap] };
 
     // When
@@ -35,13 +35,13 @@ describe("findNextWorkItem", () => {
 
   it("GIVEN multiple IN_PROGRESS items WHEN finding next THEN returns lowest numbered", () => {
     // Given: Tree with IN_PROGRESS story-43 and story-32
-    const story32 = createNode("story", 32, "second", "IN_PROGRESS");
-    const story43 = createNode("story", 43, "third", "IN_PROGRESS");
-    const feat = createNode("feature", 21, "test", "IN_PROGRESS", [
+    const story32 = createNode(WORK_ITEM_KINDS[2], 32, "second", WORK_ITEM_STATUSES[1]);
+    const story43 = createNode(WORK_ITEM_KINDS[2], 43, "third", WORK_ITEM_STATUSES[1]);
+    const feat = createNode(WORK_ITEM_KINDS[1], 21, "test", WORK_ITEM_STATUSES[1], [
       story43,
       story32,
     ]);
-    const cap = createNode("capability", 20, "test", "IN_PROGRESS", [feat]);
+    const cap = createNode(WORK_ITEM_KINDS[0], 20, "test", WORK_ITEM_STATUSES[1], [feat]);
     const tree: WorkItemTree = { nodes: [cap] };
 
     // When
@@ -55,10 +55,10 @@ describe("findNextWorkItem", () => {
 
   it("GIVEN only OPEN items WHEN finding next THEN returns OPEN with lowest number", () => {
     // Given: Tree with OPEN story-21 and story-32
-    const story21 = createNode("story", 21, "first", "OPEN");
-    const story32 = createNode("story", 32, "second", "OPEN");
-    const feat = createNode("feature", 21, "test", "OPEN", [story21, story32]);
-    const cap = createNode("capability", 20, "test", "OPEN", [feat]);
+    const story21 = createNode(WORK_ITEM_KINDS[2], 21, "first", WORK_ITEM_STATUSES[0]);
+    const story32 = createNode(WORK_ITEM_KINDS[2], 32, "second", WORK_ITEM_STATUSES[0]);
+    const feat = createNode(WORK_ITEM_KINDS[1], 21, "test", WORK_ITEM_STATUSES[0], [story21, story32]);
+    const cap = createNode(WORK_ITEM_KINDS[0], 20, "test", WORK_ITEM_STATUSES[0], [feat]);
     const tree: WorkItemTree = { nodes: [cap] };
 
     // When
@@ -66,17 +66,17 @@ describe("findNextWorkItem", () => {
 
     // Then: Should return story-21 (lowest number)
     expect(next).not.toBeNull();
-    expect(next?.status).toBe("OPEN");
+    expect(next?.status).toBe(WORK_ITEM_STATUSES[0]);
     expect(next?.number).toBe(21);
     expect(next?.slug).toBe("first");
   });
 
   it("GIVEN all DONE WHEN finding next THEN returns null", () => {
     // Given: Tree with all stories DONE
-    const story1 = createNode("story", 21, "done1", "DONE");
-    const story2 = createNode("story", 32, "done2", "DONE");
-    const feat = createNode("feature", 21, "test", "DONE", [story1, story2]);
-    const cap = createNode("capability", 20, "test", "DONE", [feat]);
+    const story1 = createNode(WORK_ITEM_KINDS[2], 21, "done1", WORK_ITEM_STATUSES[2]);
+    const story2 = createNode(WORK_ITEM_KINDS[2], 32, "done2", WORK_ITEM_STATUSES[2]);
+    const feat = createNode(WORK_ITEM_KINDS[1], 21, "test", WORK_ITEM_STATUSES[2], [story1, story2]);
+    const cap = createNode(WORK_ITEM_KINDS[0], 20, "test", WORK_ITEM_STATUSES[2], [feat]);
     const tree: WorkItemTree = { nodes: [cap] };
 
     // When
@@ -99,8 +99,8 @@ describe("findNextWorkItem", () => {
 
   it("GIVEN tree with no stories WHEN finding next THEN returns null", () => {
     // Given: Tree with only capability and feature, no stories
-    const feat = createNode("feature", 21, "test", "OPEN", []);
-    const cap = createNode("capability", 20, "test", "OPEN", [feat]);
+    const feat = createNode(WORK_ITEM_KINDS[1], 21, "test", WORK_ITEM_STATUSES[0], []);
+    const cap = createNode(WORK_ITEM_KINDS[0], 20, "test", WORK_ITEM_STATUSES[0], [feat]);
     const tree: WorkItemTree = { nodes: [cap] };
 
     // When
@@ -113,15 +113,15 @@ describe("findNextWorkItem", () => {
   it("GIVEN multiple capabilities WHEN finding next THEN returns first in BSP order", () => {
     // Given: Two capabilities - cap1 (BSP 20) has story, cap2 (BSP 21) has story
     // Even though cap2's story has lower number, cap1 comes first in tree order
-    const story43Cap1 = createNode("story", 43, "cap1-story", "OPEN");
-    const feat1 = createNode("feature", 21, "test1", "OPEN", [story43Cap1]);
-    const cap1 = createNode("capability", 20, "test1", "OPEN", [feat1]);
+    const story43Cap1 = createNode(WORK_ITEM_KINDS[2], 43, "cap1-story", WORK_ITEM_STATUSES[0]);
+    const feat1 = createNode(WORK_ITEM_KINDS[1], 21, "test1", WORK_ITEM_STATUSES[0], [story43Cap1]);
+    const cap1 = createNode(WORK_ITEM_KINDS[0], 20, "test1", WORK_ITEM_STATUSES[0], [feat1]);
 
-    const story21Cap2 = createNode("story", 21, "cap2-story", "IN_PROGRESS");
-    const feat2 = createNode("feature", 21, "test2", "IN_PROGRESS", [
+    const story21Cap2 = createNode(WORK_ITEM_KINDS[2], 21, "cap2-story", WORK_ITEM_STATUSES[1]);
+    const feat2 = createNode(WORK_ITEM_KINDS[1], 21, "test2", WORK_ITEM_STATUSES[1], [
       story21Cap2,
     ]);
-    const cap2 = createNode("capability", 21, "test2", "IN_PROGRESS", [feat2]);
+    const cap2 = createNode(WORK_ITEM_KINDS[0], 21, "test2", WORK_ITEM_STATUSES[1], [feat2]);
 
     // Tree is BSP-sorted: cap1 (20) before cap2 (21)
     const tree: WorkItemTree = { nodes: [cap1, cap2] };

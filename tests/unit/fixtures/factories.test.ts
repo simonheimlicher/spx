@@ -2,13 +2,14 @@
  * Level 1: Pure function tests for test factories
  * Story: story-65_test-factories
  */
+import { WORK_ITEM_KINDS } from "@/types";
 import { createRandomWorkItem, createWorkItem, createWorkItemName } from "@test/fixtures/factories";
 import { describe, expect, it } from "vitest";
 
 describe("createWorkItemName", () => {
   it("GIVEN capability parameters WHEN creating name THEN returns valid pattern", () => {
     // Given
-    const kind = "capability";
+    const kind = WORK_ITEM_KINDS[0];
     const number = 20;
     const slug = "core-cli";
 
@@ -16,12 +17,12 @@ describe("createWorkItemName", () => {
     const result = createWorkItemName({ kind, number, slug });
 
     // Then
-    expect(result).toBe("capability-21_core-cli");
+    expect(result).toBe(`${WORK_ITEM_KINDS[0]}-21_core-cli`);
   });
 
   it("GIVEN feature parameters WHEN creating name THEN returns valid pattern", () => {
     // Given
-    const kind = "feature";
+    const kind = WORK_ITEM_KINDS[1];
     const number = 21;
     const slug = "pattern-matching";
 
@@ -29,12 +30,12 @@ describe("createWorkItemName", () => {
     const result = createWorkItemName({ kind, number, slug });
 
     // Then
-    expect(result).toBe("feature-21_pattern-matching");
+    expect(result).toBe(`${WORK_ITEM_KINDS[1]}-21_pattern-matching`);
   });
 
   it("GIVEN story parameters WHEN creating name THEN returns valid pattern", () => {
     // Given
-    const kind = "story";
+    const kind = WORK_ITEM_KINDS[2];
     const number = 32;
     const slug = "parse-features";
 
@@ -42,18 +43,18 @@ describe("createWorkItemName", () => {
     const result = createWorkItemName({ kind, number, slug });
 
     // Then
-    expect(result).toBe("story-32_parse-features");
+    expect(result).toBe(`${WORK_ITEM_KINDS[2]}-32_parse-features`);
   });
 
   it("GIVEN only kind WHEN creating name THEN uses default number and slug", () => {
     // Given
-    const kind = "capability";
+    const kind = WORK_ITEM_KINDS[0];
 
     // When
     const result = createWorkItemName({ kind });
 
     // Then
-    expect(result).toMatch(/^capability-\d{2}_test-/);
+    expect(result).toMatch(new RegExp(`^${WORK_ITEM_KINDS[0]}-\\d{2}_test-`));
   });
 });
 
@@ -61,7 +62,7 @@ describe("createWorkItem", () => {
   it("GIVEN all parameters WHEN creating work item THEN returns complete object", () => {
     // Given
     const params = {
-      kind: "capability" as const,
+      kind: WORK_ITEM_KINDS[0],
       number: 20,
       slug: "core-cli",
     };
@@ -71,24 +72,24 @@ describe("createWorkItem", () => {
 
     // Then
     expect(result).toEqual({
-      kind: "capability",
+      kind: WORK_ITEM_KINDS[0],
       number: 20,
       slug: "core-cli",
-      path: "/test/specs/work/doing/capability-21_core-cli",
+      path: `/test/specs/work/doing/${WORK_ITEM_KINDS[0]}-21_core-cli`,
     });
   });
 
   it("GIVEN partial parameters WHEN creating work item THEN fills defaults", () => {
     // Given
     const params = {
-      kind: "feature" as const,
+      kind: WORK_ITEM_KINDS[1],
     };
 
     // When
     const result = createWorkItem(params);
 
     // Then
-    expect(result.kind).toBe("feature");
+    expect(result.kind).toBe(WORK_ITEM_KINDS[1]);
     expect(result.number).toBeGreaterThanOrEqual(10);
     expect(result.number).toBeLessThanOrEqual(99);
     expect(result.slug).toBeDefined();
@@ -101,7 +102,7 @@ describe("createRandomWorkItem", () => {
     const result = createRandomWorkItem();
 
     // Then
-    expect(result.kind).toMatch(/^(capability|feature|story)$/);
+    expect(result.kind).toMatch(new RegExp(`^(${WORK_ITEM_KINDS.join("|")})$`));
     expect(result.number).toBeGreaterThanOrEqual(10);
     expect(result.number).toBeLessThanOrEqual(99);
     expect(result.slug).toBeTruthy();
@@ -118,12 +119,12 @@ describe("createRandomWorkItem", () => {
 
   it("GIVEN specific kind WHEN creating random work item THEN uses that kind", () => {
     // Given
-    const kind = "story";
+    const kind = WORK_ITEM_KINDS[2];
 
     // When
     const result = createRandomWorkItem({ kind });
 
     // Then
-    expect(result.kind).toBe("story");
+    expect(result.kind).toBe(WORK_ITEM_KINDS[2]);
   });
 });

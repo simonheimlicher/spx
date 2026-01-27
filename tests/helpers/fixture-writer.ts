@@ -7,6 +7,7 @@
  *
  * @see specs/doing/capability-21_core-cli/decisions/adr-003_e2e-fixture-generation.md
  */
+import { WORK_ITEM_KINDS, WORK_ITEM_STATUSES } from "@/types";
 import { randomUUID } from "node:crypto";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -87,7 +88,7 @@ async function materializeCapability(doingPath: string, cap: FixtureNode): Promi
   for (const child of cap.children) {
     if (child.kind === "adr") {
       await materializeAdr(decisionsPath, child);
-    } else if (child.kind === "feature") {
+    } else if (child.kind === WORK_ITEM_KINDS[1]) {
       await materializeFeature(capPath, child);
     }
   }
@@ -125,7 +126,7 @@ async function materializeFeature(capPath: string, feat: FixtureNode): Promise<v
   );
 
   // Materialize stories
-  for (const story of feat.children.filter((c) => c.kind === "story")) {
+  for (const story of feat.children.filter((c) => c.kind === WORK_ITEM_KINDS[2])) {
     await materializeStory(featPath, story);
   }
 }
@@ -151,12 +152,12 @@ async function materializeStory(featPath: string, story: FixtureNode): Promise<v
   await mkdir(testsPath, { recursive: true });
 
   switch (story.status) {
-    case "DONE":
+    case WORK_ITEM_STATUSES[2]:
       // DONE: tests/DONE.md exists
       await writeFile(join(testsPath, "DONE.md"), `# Done\n\nStory completed.\n`);
       break;
 
-    case "IN_PROGRESS":
+    case WORK_ITEM_STATUSES[1]:
       // IN_PROGRESS: tests/*.test.ts exists, no DONE.md
       await writeFile(
         join(testsPath, "test.test.ts"),
@@ -164,7 +165,7 @@ async function materializeStory(featPath: string, story: FixtureNode): Promise<v
       );
       break;
 
-    case "OPEN":
+    case WORK_ITEM_STATUSES[0]:
       // OPEN: tests/ directory exists but is empty
       // Directory already created above, nothing more needed
       break;

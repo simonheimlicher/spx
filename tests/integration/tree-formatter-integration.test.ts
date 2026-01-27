@@ -9,7 +9,7 @@ import { formatMarkdown } from "@/reporter/markdown";
 import { formatTable } from "@/reporter/table";
 import { formatText } from "@/reporter/text";
 import { buildTree, type TreeBuildDeps } from "@/tree/build";
-import type { WorkItem } from "@/types";
+import { WORK_ITEM_KINDS, WORK_ITEM_STATUSES, type WorkItem } from "@/types";
 import { describe, expect, it } from "vitest";
 
 /**
@@ -18,11 +18,11 @@ import { describe, expect, it } from "vitest";
 const testDeps: TreeBuildDeps = {
   getStatus: async (path) => {
     // Simulate different statuses
-    if (path.includes("story-21")) return "DONE";
-    if (path.includes("story-32")) return "IN_PROGRESS";
-    if (path.includes("story-43")) return "OPEN";
+    if (path.includes("story-21")) return WORK_ITEM_STATUSES[2];
+    if (path.includes("story-32")) return WORK_ITEM_STATUSES[1];
+    if (path.includes("story-43")) return WORK_ITEM_STATUSES[0];
     // Features and capabilities will get their status from rollup
-    return "OPEN";
+    return WORK_ITEM_STATUSES[0];
   },
 };
 
@@ -31,25 +31,25 @@ describe("Feature 54 + Feature 65 Integration", () => {
     // Given - add multiple stories with different statuses
     const workItems: WorkItem[] = [
       {
-        kind: "capability",
+        kind: WORK_ITEM_KINDS[0],
         number: 20,
         slug: "core-cli",
         path: "/specs/capability-21_core-cli",
       },
       {
-        kind: "feature",
+        kind: WORK_ITEM_KINDS[1],
         number: 32,
         slug: "tree-building",
         path: "/specs/capability-21_core-cli/feature-32_tree-building",
       },
       {
-        kind: "story",
+        kind: WORK_ITEM_KINDS[2],
         number: 21,
         slug: "parent-child",
         path: "/specs/capability-21_core-cli/feature-32_tree-building/story-21_parent-child",
       },
       {
-        kind: "story",
+        kind: WORK_ITEM_KINDS[2],
         number: 32,
         slug: "sorting",
         path: "/specs/capability-21_core-cli/feature-32_tree-building/story-32_sorting",
@@ -72,13 +72,13 @@ describe("Feature 54 + Feature 65 Integration", () => {
     // Given
     const workItems: WorkItem[] = [
       {
-        kind: "capability",
+        kind: WORK_ITEM_KINDS[0],
         number: 20,
         slug: "test",
         path: "/specs/capability-21_test",
       },
       {
-        kind: "feature",
+        kind: WORK_ITEM_KINDS[1],
         number: 32,
         slug: "feat",
         path: "/specs/capability-21_test/feature-32_feat",
@@ -101,13 +101,13 @@ describe("Feature 54 + Feature 65 Integration", () => {
     // Given
     const workItems: WorkItem[] = [
       {
-        kind: "capability",
+        kind: WORK_ITEM_KINDS[0],
         number: 20,
         slug: "test",
         path: "/specs/capability-21_test",
       },
       {
-        kind: "feature",
+        kind: WORK_ITEM_KINDS[1],
         number: 32,
         slug: "feat",
         path: "/specs/capability-21_test/feature-32_feat",
@@ -127,7 +127,7 @@ describe("Feature 54 + Feature 65 Integration", () => {
     // Given
     const workItems: WorkItem[] = [
       {
-        kind: "capability",
+        kind: WORK_ITEM_KINDS[0],
         number: 20,
         slug: "test",
         path: "/specs/capability-21_test",
@@ -148,19 +148,19 @@ describe("Feature 54 + Feature 65 Integration", () => {
     // Given - features out of order in input
     const workItems: WorkItem[] = [
       {
-        kind: "capability",
+        kind: WORK_ITEM_KINDS[0],
         number: 20,
         slug: "test",
         path: "/specs/capability-21_test",
       },
       {
-        kind: "feature",
+        kind: WORK_ITEM_KINDS[1],
         number: 65,
         slug: "feat3",
         path: "/specs/capability-21_test/feature-65_feat3",
       },
       {
-        kind: "feature",
+        kind: WORK_ITEM_KINDS[1],
         number: 32,
         slug: "feat1",
         path: "/specs/capability-21_test/feature-32_feat1",

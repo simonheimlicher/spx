@@ -2,8 +2,9 @@
  * Level 1: Pure function tests for capability pattern matching
  * Story: story-21_parse-capability-names
  */
-import { describe, it, expect } from "vitest";
 import { parseWorkItemName } from "@/scanner/patterns";
+import { WORK_ITEM_KINDS } from "@/types";
+import { describe, expect, it } from "vitest";
 
 describe("parseWorkItemName - Capabilities", () => {
   it("GIVEN valid capability name WHEN parsing THEN extracts kind, number, and slug", () => {
@@ -15,7 +16,7 @@ describe("parseWorkItemName - Capabilities", () => {
 
     // Then
     expect(result).toEqual({
-      kind: "capability",
+      kind: WORK_ITEM_KINDS[0],
       number: 20,
       slug: "core-cli",
     });
